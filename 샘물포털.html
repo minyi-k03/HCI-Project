@@ -1,0 +1,3185 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <title>상명대학교 샘물 포털 - 학생 대시보드</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+  
+  <style>
+    /* [1] 초기화 & 기본 설정 */
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Pretendard', -apple-system, BlinkMacSystemFont, system-ui, Roboto, sans-serif;
+      background-color: #f4f6fb;
+      color: #1f2933;
+      height: 100vh;
+      overflow: hidden;
+    }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+
+    /* [2] 전체 레이아웃 */
+    .layout { display: grid; grid-template-columns: 260px 1fr; height: 100vh; transition: 0.3s; }
+    .layout.collapsed { grid-template-columns: 70px 1fr; }
+
+    /* [3] 사이드바 */
+    .sidebar { background: #243777; color: white; display: flex; flex-direction: column; padding: 20px 15px; overflow: hidden; z-index: 50; }
+    .sidebar-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 30px; height: 40px; }
+    
+    /* 로고 */
+    .logo-area { display: flex; align-items: center; gap: 10px; cursor: pointer; overflow: hidden; white-space: nowrap; border-radius:12px; transition:background 0.2s; }
+    .logo-area:hover { background-color: rgba(255,255,255,0.1); }
+    .logo-img { width: 35px; height: 35px; object-fit: contain; display: none; }
+    .logo-text { font-size: 1.5rem; font-weight: 800; line-height: 1.2; }
+    .logo-text span { font-size: 0.75rem; font-weight: 400; opacity: 0.8; display: block; }
+    
+    /* 사이드바 접혔을 때 로고 */
+    .layout.collapsed .logo-area { justify-content: center; width: 100%; padding: 0; height: 60px; }
+    .layout.collapsed .logo-img { display: block; margin: 0 auto; width: 50px; height: 50px; object-fit: contain; }
+    .layout.collapsed .logo-text { display: none; }
+    .layout.collapsed .sidebar { padding-left: 5px; padding-right: 5px; overflow: visible !important; }
+
+    .toggle-btn { background: rgba(255,255,255,0.1); border: none; color: white; width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+    .layout.collapsed .toggle-btn { display: none; }
+
+    /* 메뉴 */
+    .menu-title { font-size: 0.75rem; opacity: 0.6; margin-bottom: 10px; padding-left: 10px; font-weight: 700; }
+    .nav-list { display: flex; flex-direction: column; gap: 5px; margin-bottom: 20px; }
+    .nav-item { display: flex; align-items: center; padding: 12px; border-radius: 10px; cursor: pointer; transition: 0.2s; color: rgba(255,255,255,0.9); position: relative; }
+    .nav-item:hover { background: rgba(255,255,255,0.15); }
+    .nav-item.active { background: white; color: #243777; font-weight: 700; }
+    .nav-item .icon { font-size: 1.2rem; margin-right: 12px; min-width: 24px; text-align: center; }
+    .nav-item .label { white-space: nowrap; }
+    .nav-dot { width: 6px; height: 6px; background: #ef4444; border-radius: 50%; margin-left: auto; }
+
+    
+    
+
+
+    /* 마우스 올렸을 때 */
+    .nav-item.highlight-btn:hover {
+        background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+        transform: translateY(-2px) scale(1.02); /* 살짝 커지며 떠오름 */
+        box-shadow: 0 6px 20px rgba(59, 130, 246, 0.6);
+    }
+    
+    /* (선택사항) 강조 효과 애니메이션 */
+    @keyframes pulse-blue {
+        0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4); }
+        70% { box-shadow: 0 0 0 6px rgba(59, 130, 246, 0); }
+        100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+    }
+
+    /* 접힌 상태 메뉴 */
+    .layout.collapsed .menu-title, .layout.collapsed .nav-item .label { display: none; }
+    .layout.collapsed .nav-item { justify-content: center; padding: 12px 0; overflow: visible; }
+    .layout.collapsed .nav-item .icon { margin: 0; }
+    .layout.collapsed .nav-dot { position: absolute; top: 8px; right: 12px; border: 2px solid #243777; width: 7px; height: 7px; }
+
+    /* 툴팁 */
+    .layout.collapsed .nav-item:hover::after {
+      content: attr(data-title); position: absolute; left: 100%; top: 50%; transform: translateY(-50%);
+      background: #1f2933; color: white; padding: 6px 10px; border-radius: 4px; font-size: 0.8rem; margin-left: 12px; white-space: nowrap; z-index: 9999; pointer-events: none;
+      animation: tooltipFade 0.2s ease-out;
+    }
+    .layout.collapsed .nav-item:hover::before {
+      content: ""; position: absolute; left: 100%; top: 50%; transform: translateY(-50%); margin-left: 11px;
+      border-width: 4px; border-style: solid; border-color: transparent #1f2933 transparent transparent; z-index: 1000;
+    }
+    @keyframes tooltipFade { from { opacity: 0; transform: translate(-10px, -50%); } to { opacity: 1; transform: translate(0, -50%); } }
+    
+    .sidebar-footer { margin-top: auto; font-size: 0.7rem; opacity: 0.5; text-align: center; }
+
+    /* [4] 메인 영역 */
+    .main { display: flex; flex-direction: column; height: 100vh; overflow: hidden; }
+    
+    /* 헤더 */
+    .header { height: 70px; background: white; border-bottom: 1px solid #e2e8f0; display: flex; justify-content: space-between; align-items: center; padding: 0 30px; position: sticky; top: 0; z-index: 40; gap: 20px; }
+    .header-left { display: flex; align-items: center; gap: 15px; flex: 1; min-width: 0; }
+    .header-right { display: flex; align-items: center; gap: 24px; flex-shrink: 0; }
+
+    /* 검색창 */
+    .search-container { max-width: 320px; width: 100%; position: relative; display: flex; align-items: center; }
+    .search-input { width: 100%; padding: 10px 15px 10px 40px; border: 1px solid #e2e8f0; border-radius: 12px; background: #f8fafc; font-size: 0.9rem; outline: none; transition: all 0.2s ease; }
+    .search-input:focus { border-color: #243777; background: #fff; box-shadow: 0 0 0 4px rgba(36, 55, 119, 0.1); }
+    .search-icon { position: absolute; left: 12px; color: #94a3b8; font-size: 1.2rem; }
+
+    /* [위치] <style> 태그 내부 */
+
+    /* 세션 타이머 컨테이너 */
+    .session-timer { 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        font-size: 0.9rem; 
+        color: #475569; 
+        font-weight: 600; 
+        background: #fff; /* 흰색 배경 */
+        border: 1px solid #e2e8f0; /* 연한 테두리 */
+        padding: 5px 5px 5px 12px; /* 안쪽 여백 */
+        border-radius: 30px; /* 둥근 모서리 */
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); /* 살짝 그림자 */
+    }
+
+    /* 타이머 텍스트 (숫자) */
+    #timerText { 
+        font-variant-numeric: tabular-nums; /* 숫자 간격 일정하게 */
+        color: #243777; /* 상명대 블루 */
+        font-weight: 700; 
+        margin-right: 4px; 
+    }
+
+    /* [핵심] 연장 버튼 스타일 */
+    .btn-extend { 
+        background: #eff6ff; /* 아주 연한 파랑 배경 */
+        color: #2563eb; /* 진한 파랑 글씨 */
+        border: 1px solid transparent; 
+        padding: 4px 12px; 
+        border-radius: 20px; /* 캡슐 모양 */
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        cursor: pointer; 
+        transition: all 0.2s ease; 
+        margin-left: auto; 
+    }
+
+    /* 버튼 호버 효과 */
+    .btn-extend:hover { 
+        background: #2563eb; /* 배경이 파랗게 변함 */
+        color: white; /* 글씨는 흰색으로 */
+        transform: translateY(-1px); /* 살짝 위로 떠오름 */
+        box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3); /* 파란 그림자 */
+    }
+
+    /* 버튼 클릭 효과 */
+    .btn-extend:active { 
+        transform: translateY(0); 
+    }
+
+    /* 프로필 */
+    .user-info-text { display: flex; flex-direction: column; align-items: flex-end; margin-right: 5px; }
+    .info-major { font-size: 0.9rem; color: #1e293b; font-weight: 700; }
+    
+    .profile-container { position: relative; cursor: pointer; }
+    .profile-wrapper { display: flex; align-items: center; gap: 10px; }
+    .avatar-wrapper { position: relative; display: flex; align-items: center; }
+    .avatar { width: 42px; height: 42px; background: #243777; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; object-fit: cover; }
+    .avatar-badge { position: absolute; top: 0; right: -2px; width: 10px; height: 10px; background-color: #ef4444; border: 2px solid #ffffff; border-radius: 50%; z-index: 10; }
+    .user-name { font-size: 0.9rem; font-weight: 600; color: #1e293b; }
+
+    .dropdown-menu { position: absolute; top: 120%; right: 0; width: 180px; background: white; border: 1px solid #e2e8f0; border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); display: none; flex-direction: column; overflow: hidden; z-index: 100; }
+    .dropdown-menu.show { display: flex; }
+    .dropdown-item { padding: 12px 15px; font-size: 0.9rem; color: #475569; display: flex; align-items: center; gap: 10px; cursor: pointer; transition: 0.2s; }
+    .dropdown-item:hover { background: #f8fafc; color: #243777; }
+    .dropdown-divider { height: 1px; background: #e2e8f0; margin: 0; }
+    .text-danger { color: #ef4444; }
+    .badge-dot { width: 8px; height: 8px; background-color: #ef4444; border-radius: 50%; margin-left: auto; }
+
+    /* [5] 콘텐츠 뷰 */
+    .content-body { flex: 1; overflow-y: auto; padding: 24px; position: relative; }
+    .view-section { display: none; animation: fadeUp 0.4s ease; }
+    .view-section.active { display: block; }
+    @keyframes fadeUp { from { opacity: 0; transform: translateY(15px); } to { opacity: 1; transform: translateY(0); } }
+
+    
+
+    /* 대시보드 그리드 (1.2 : 1) */
+    .dashboard-grid { display: grid; grid-template-columns: 1.2fr 1fr; gap: 24px; align-items: start; }
+    .left-column { display: flex; flex-direction: column; gap: 24px; }
+    /* [수정] 오른쪽 컬럼 (시간표 + 바로가기) */
+    .right-column { 
+        display: flex; 
+        flex-direction: column; 
+        gap: 24px; /* 위젯 사이 간격 */
+        height: 100%; 
+    }
+
+    /* 카드 공통 */
+    .card { background: white; border-radius: 16px; padding: 24px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); display: flex; flex-direction: column; }
+    .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .card-title { font-size: 1.1rem; font-weight: 700; color: #1e293b; }
+    .card-link { font-size: 0.85rem; color: #243777; font-weight: 600; cursor: pointer; }
+
+    /* [중요] 성적표 위젯 스타일 (White 테마) */
+    .grade-card { display: flex; flex-direction: column; border: 1px solid #e2e8f0; overflow: hidden; }
+    .grade-header-bg { background: #ffffff; padding: 24px 24px 10px 24px; border-bottom: 1px solid #f1f5f9; }
+    .transparent-select { background: #f8fafc; border: 1px solid #e2e8f0; color: #475569; padding: 6px 12px; border-radius: 8px; outline: none; cursor: pointer; font-size: 0.85rem; font-weight: 600; }
+    
+    /* 원형 차트 */
+    .chart-container { position: relative; width: 100px; height: 100px; border-radius: 50%; background: conic-gradient(#243777 0% 100%, #e2e8f0 100% 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 10px rgba(36, 55, 119, 0.2); }
+    .chart-inner { width: 80px; height: 80px; background: white; border-radius: 50%; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 2; }
+    
+    .grade-header-content { display: flex; align-items: center; justify-content: space-between; padding-top: 10px; }
+    .rank-badge { background: rgba(36, 55, 119, 0.1); color: #243777; padding: 4px 8px; border-radius: 6px; font-size: 0.75rem; font-weight: 700; margin-top: 5px; display: inline-block; }
+
+    /* 성적 리스트 */
+    .grade-list-area { padding: 10px 24px 24px 24px; flex: 1; overflow-y: auto; background: #fff; max-height: 200px; }
+    .modern-grade-list { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+    .g-item { display: flex; justify-content: space-between; align-items: center; padding-bottom: 8px; border-bottom: 1px dashed #f1f5f9; }
+    .g-item:last-child { border-bottom: none; }
+    .subject-icon {
+        width: 45px; height: 45px; /* 아이콘 박스 키움 */
+        border-radius: 14px;       /* 부드러운 사각형 */
+        display: flex; align-items: center; justify-content: center;
+        margin-right: 15px;
+        font-size: 1.4rem;         /* 아이콘 그림도 키움 */
+        transition: 0.2s;
+    }
+
+    /* =========================================
+       [추가] 성적 조회 페이지 스타일 (리스트 & 상세)
+       ========================================= */
+    
+    /* [수정] 성적 테이블 스타일 */
+    .grade-table {
+        width: 100%; 
+        border-collapse: separate; 
+        border-spacing: 0 8px; 
+    }
+    .grade-table th {
+        text-align: left; 
+        color: #64748b; 
+        font-size: 0.85rem; 
+        font-weight: 600;
+        padding: 0 15px 8px 15px;
+    }
+    .grade-table td {
+        background: white; 
+        padding: 15px 10px; /* 좌우 패딩 살짝 줄임 */
+        border-top: 1px solid #f1f5f9; 
+        border-bottom: 1px solid #f1f5f9;
+        font-size: 0.9rem;
+        color: #334155;
+    }
+    .grade-table tr td:first-child {
+        border-left: 1px solid #f1f5f9; 
+        border-top-left-radius: 12px; 
+        border-bottom-left-radius: 12px;
+    }
+    .grade-table tr td:last-child {
+        border-right: 1px solid #f1f5f9; 
+        border-top-right-radius: 12px; 
+        border-bottom-right-radius: 12px;
+    }
+
+    /* [중요] 클릭 효과 제거 */
+    .grade-row { 
+        cursor: default; /* 손가락 모양 제거 */
+    }
+    /* 마우스 올렸을 때 배경색 살짝만 변경 (선택사항) */
+    .grade-row:hover td {
+        background-color: #f8fafc; 
+    }
+
+    /* 이수구분 뱃지 스타일 */
+    .g-type { 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        padding: 4px 8px; 
+        border-radius: 6px; 
+        display: inline-block;
+    }
+    .g-type.major { color: #2563eb; background: #eff6ff; }   /* 전공 */
+    .g-type.general { color: #16a34a; background: #f0fdf4; } /* 교양 */
+
+    /* 2. 상세 분석 패널 (기본 숨김) */
+    .grade-detail-panel {
+        display: none; /* JS로 토글 */
+        background: #fff; border: 1px solid #e2e8f0;
+        border-radius: 16px; padding: 25px;
+        margin-top: 20px;
+        animation: slideUp 0.3s ease-out;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+    }
+    @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    .detail-header {
+        display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 25px;
+        border-bottom: 2px solid #f1f5f9; padding-bottom: 15px;
+    }
+    .detail-title { font-size: 1.2rem; font-weight: 800; color: #1e293b; margin-bottom: 5px; }
+    .detail-prof { font-size: 0.9rem; color: #64748b; }
+    
+    /* 석차 뱃지 */
+    .rank-capsule {
+        background: #fefce8; color: #ca8a04; border: 1px solid #fef9c3;
+        padding: 6px 12px; border-radius: 20px; font-weight: 700; font-size: 0.9rem;
+        display: flex; align-items: center; gap: 5px;
+    }
+
+        /* [새로 추가] 그래프 대신 점수만 보여주는 스타일 */
+    .score-summary-grid {
+        display: flex;
+        align-items: center;
+        justify-content: space-around; /* 간격 균등 배치 */
+        background: #f8fafc;
+        border-radius: 12px;
+        padding: 20px;
+        margin-top: 10px;
+    }
+
+    .score-box {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        flex: 1; /* 너비 균등 */
+    }
+
+    .sb-label {
+        font-size: 0.85rem;
+        color: #64748b;
+        font-weight: 600;
+    }
+
+    .sb-value {
+        font-size: 1.5rem;
+        font-weight: 800;
+        color: #334155;
+    }
+
+    /* 내 점수 강조 스타일 */
+    .score-box.highlight .sb-label {
+        color: #2563eb; /* 파란색 텍스트 */
+    }
+    .score-box.highlight .sb-value {
+        color: #2563eb; 
+        font-size: 1.8rem; /* 숫자를 더 크게 */
+    }
+
+    /* 사이 구분선 */
+    .sb-divider {
+        width: 1px;
+        height: 40px;
+        background: #cbd5e1;
+    }
+    
+    /* 그래프 색상 */
+    .bar-me { background: #2563eb; }    /* 내 점수 */
+    .bar-avg { background: #94a3b8; }   /* 평균 */
+    .bar-max { background: #ef4444; }   /* 최고점 */
+
+    .chart-val { font-size: 0.9rem; font-weight: 700; color: #334155; }
+
+
+    /* 전공/교양에 따른 아이콘 색상 (JS에서 클래스 추가 예정) */
+    .subject-icon.major { background: #eff6ff; color: #2563eb; }   /* 전공: 파랑 */
+    .subject-icon.general { background: #f0fdf4; color: #16a34a; } /* 교양: 초록 */
+    .subject-icon.other { background: #fff7ed; color: #ea580c; }   /* 일선: 주황 */
+    .g-name { font-size: 1rem; font-weight: 700; color: #1e293b; 
+        letter-spacing: -0.3px;}
+    .g-type { font-size: 0.75rem; font-weight: 700; 
+        margin-bottom: 2px; display: inline-block;
+        padding: 2px 6px; border-radius: 4px; width: fit-content; }
+    .g-badge {padding: 8px 14px;        /* 여백 늘림 */
+        border-radius: 12px;      /* 더 둥글게 */
+        font-size: 1.2rem !important; /* 글자 확실히 키움 */
+        font-weight: 900 !important;  /* 아주 두껍게 */
+        min-width: 55px;          /* 너비 확보 */
+        text-align: center;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.05); /* 살짝 입체감 */ }
+    .g-badge.A { background: #eff6ff; color: #2563eb; border: 1px solid #dbeafe; }
+    .g-badge.B { background: #f0fdf4; color: #16a34a; border: 1px solid #dcfce7; }
+    .g-badge.C { background: #fefce8; color: #ca8a04; border: 1px solid #fef9c3; }
+    .g-badge.P { background: #f8fafc; color: #475569; border: 1px solid #e2e8f0; }
+    /* 구분 텍스트에도 색상 적용 */
+    .g-type.major { color: #2563eb; background: rgba(37, 99, 235, 0.1); }
+    .g-type.general { color: #16a34a; background: rgba(22, 163, 74, 0.1); }
+
+    /* 바로가기 */
+    .quick-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+    .quick-item { display: flex; flex-direction: column; align-items: center; cursor: pointer; transition: 0.2s; }
+    .quick-item:hover { transform: translateY(-3px); }
+    .quick-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; margin-bottom: 8px; color: white; font-size: 1.5rem; }
+    .quick-text { font-size: 0.85rem; font-weight: 500; color: #475569; }
+
+    /* To-Do */
+    .todo-list { display: flex; flex-direction: column; gap: 10px; }
+    .todo-item { display: flex; align-items: center; gap: 10px; }
+    .todo-chk { width: 18px; height: 18px; accent-color: #243777; }
+    .todo-text { font-size: 0.9rem; }
+    .done { text-decoration: line-through; color: #94a3b8; }
+
+    /* 공지사항 */
+    .notice-item { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px dashed #e2e8f0; font-size: 0.9rem; }
+    .notice-tag { font-size: 0.75rem; padding: 2px 6px; border-radius: 4px; margin-right: 8px; font-weight: 600; }
+    .notice-date { font-size: 0.8rem; color: #94a3b8; }
+
+    /* 시간표 */
+    .timetable-wrapper { position: relative; height: 650px; border: 1px solid #e2e8f0; border-radius: 12px; background: #fff; overflow: hidden; }
+    .timetable-grid { display: grid; grid-template-columns: 50px repeat(5, 1fr); grid-template-rows: 40px repeat(9, 1fr); width: 100%; height: 100%; }
+    .grid-background { position: absolute; top: 0; left: 0; z-index: 1; background: #e5e7eb; gap: 1px; border: 1px solid #e5e7eb; }
+    .bg-cell { background: white; }
+    .bg-header { background: #f9fafb; font-weight: 700; color: #333; display:flex; align-items:center; justify-content:center; font-size:0.8rem;}
+    .bg-time { background: #f9fafb; font-weight: 600; color: #666; display:flex; align-items:center; justify-content:center; font-size:0.8rem;}
+    .grid-content { position: absolute; top: 0; left: 0; z-index: 2; pointer-events: none; }
+    /* [수정] 시간표 수업 블록 (빈틈없이 꽉 채우기) */
+    /* [수정] 시간표 수업 블록 (빈틈없이 꽉 채우기) */
+    .class-block {
+        /* 1. 크기 강제 확장 (필수) */
+        width: 100% !important;
+        height: 100% !important;
+
+        /* 2. 여백 제거 (핵심) */
+        margin: 0 !important;
+
+        /* 3. 디자인 다듬기 */
+        border-radius: 0;
+        
+        /* 텍스트 정렬 (Flexbox) */
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        
+        /* ▼▼▼ [이 부분을 추가해 주세요] ▼▼▼ */
+        text-align: center; 
+        /* ▲▲▲ 텍스트 자체를 가운데 정렬 ▲▲▲ */
+        
+        color: white;
+        font-size: 0.85rem;
+        cursor: pointer;
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2);
+        pointer-events: auto;
+        
+        /* 애니메이션 */
+        transition: transform 0.1s, opacity 0.1s;
+    }
+
+    /* 마우스 올렸을 때 살짝 튀어나오는 효과 */
+    .class-block:hover {
+        transform: scale(1.05); /* 5% 확대 */
+        z-index: 10; /* 다른 블록 위로 올라오게 */
+        box-shadow: 0 4px 12px rgba(0,0,0,0.3); /* 그림자 진하게 */
+        border-radius: 4px; /* 호버 시에만 둥글게 */
+    }
+    
+    .class-block strong { 
+        font-size: 0.95rem; 
+        margin-bottom: 2px; 
+        display: block; 
+        font-weight: 700;
+        text-shadow: 0 1px 2px rgba(0,0,0,0.1);
+    }
+    .class-block strong { font-size: 0.9rem; margin-bottom: 4px; display: block; }
+
+    /* 모바일 */
+    .mobile-menu-btn { display: none; font-size: 1.5rem; background: none; border: none; cursor: pointer; }
+    .mobile-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); z-index: 40; }
+    @media (max-width: 900px) {
+      .layout { grid-template-columns: 1fr; }
+      .sidebar { position: fixed; top: 0; left: 0; height: 100%; width: 250px; transform: translateX(-100%); transition: 0.3s; }
+      .sidebar.open { transform: translateX(0); }
+      .mobile-overlay.open { display: block; }
+      .mobile-menu-btn { display: block; margin-right: 10px; }
+      .dashboard-grid { grid-template-columns: 1fr; }
+      .timetable-wrapper { height: 500px; }
+      .search-container { display: none; }
+      .session-timer { display: none; }
+      .user-name { display: none; }
+      .user-info-text { display: none; }
+    }
+
+    /* 테이블 스타일 */
+    .simple-table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    .simple-table th { background: #f9fafb; padding: 12px; text-align: left; font-weight: 600; border-bottom: 1px solid #e2e8f0; }
+    .simple-table td { padding: 12px; border-bottom: 1px solid #f1f5f9; }
+
+    /* [추가] 학점 이수 그래프 위젯 스타일 */
+    .graph-wrapper {
+        display: flex;
+        align-items: center;
+        padding: 15px 10px;
+        gap: 20px; /* 차트와 리스트 사이 간격 */
+    }
+
+    /* 도넛 차트 */
+    .donut-chart {
+        position: relative;
+        width: 110px; height: 110px; /* 크기 적당히 */
+        border-radius: 50%;
+        background: conic-gradient(#243777 0% 85%, #f1f5f9 85% 100%);
+        display: flex; align-items: center; justify-content: center;
+        flex-shrink: 0; /* 크기 줄어듦 방지 */
+    }
+    
+    /* 차트 가운데 구멍 */
+    .donut-hole {
+        width: 80px; height: 80px;
+        background: white; border-radius: 50%;
+        display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.05);
+    }
+    .donut-percent { font-size: 1.6rem; font-weight: 800; color: #243777; line-height: 1; }
+    .donut-text { font-size: 0.85rem; color: #64748b; margin-top: 4px; }
+    /* 오른쪽 상세 리스트 (게이지 바 추가됨) */
+    .graph-details {
+        flex: 1; /* 남은 공간 꽉 채우기 */
+        display: flex;
+        flex-direction: column;
+        gap: 12px; /* 항목 간 간격 */
+    }
+
+    .detail-item {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+    }
+
+    /* 텍스트 라인 (제목 + 점수) */
+    .detail-header {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.8rem;
+        font-weight: 700;
+        color: #334155;
+    }
+    .detail-score { color: #64748b; font-weight: 500; font-size: 0.75rem; }
+
+    /* 미니 게이지 바 배경 */
+    .mini-track {
+        width: 100%;
+        height: 6px;
+        background: #f1f5f9;
+        border-radius: 10px;
+        overflow: hidden;
+    }
+    /* 미니 게이지 바 채움 */
+    .mini-fill {
+        height: 100%;
+        border-radius: 10px;
+    }
+    .graph-legend {
+        flex: 0 0 auto; /* 크기가 맘대로 늘어나지 않게 고정 */
+        /* 간격을 좁힘 (20px -> 15px) */
+        margin-left: 15px; 
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        width: 55%; /* 너비 강제 지정 (그래프와 비율 맞춤) */
+    }
+    .legend-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-size: 0.85rem;
+    }
+    /* [수정] 학점 현황 그래프 글자 크기 키우기 */
+    
+    /* 1. '전공', '교양', '일선' 글자 */
+    .legend-label { 
+        display: flex; align-items: center; gap: 8px; 
+        color: #334155; 
+        font-weight: 700; 
+        font-size: 1.05rem; /* 0.85rem -> 1.05rem (약 17px)로 확대 */
+    }
+    
+    /* 2. 이수 학점 (앞쪽 큰 숫자: 60) */
+    .legend-val { 
+        font-weight: 800; 
+        color: #1e293b; 
+        font-size: 1.3rem; /* 1rem -> 1.3rem (약 21px)로 확대 */
+    }
+    
+    /* 3. 기준 학점 (뒤쪽 작은 숫자: / 75) */
+    .legend-sub { 
+        font-size: 0.95rem; /* 0.7rem -> 0.95rem (약 15px)로 확대 */
+        color: #94a3b8; 
+        margin-left: 4px; 
+        font-weight: 500; 
+    }
+
+    
+
+    /* [추가] 메세지함 스타일 */
+    .message-list { list-style: none; display: flex; flex-direction: column; }
+    .message-item { 
+        display: flex; align-items: center; padding: 16px; 
+        cursor: pointer; transition: 0.2s; 
+        
+        /* ▼▼▼ [여기 수정됨] ▼▼▼ */
+        border-radius: 12px;       /* 모서리 둥글게 */
+        margin-bottom: 8px;        /* 메시지 사이 간격 띄우기 */
+        border: 1px solid #f1f5f9; /* 전체 테두리 (기존 바닥선 대체) */
+    }
+    .message-item:hover { background: #f8fafc; }
+    .message-item:last-child { border-bottom: none; }
+    
+    /* 읽지 않은 메시지 (배경색 강조) */
+    .message-item.unread { background: #eff6ff ; }
+    .message-item.unread .msg-preview { font-weight: 600; color: #1e293b; }
+    
+    /* 보낸 사람 프로필 */
+    .msg-avatar { 
+        width: 40px; height: 40px; border-radius: 50%; 
+        display: flex; align-items: center; justify-content: center; 
+        font-weight: 700; font-size: 0.85rem; color: white; margin-right: 15px; flex-shrink: 0;
+    }
+    .avatar-prof { background: #243777; } /* 교수님 색상 */
+    .avatar-stud { background: #64748b; } /* 학생 색상 */
+
+    /* 메시지 내용 */
+    .msg-content { flex: 1; overflow: hidden; }
+    .msg-sender { font-size: 0.9rem; font-weight: 700; color: #1e293b; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;}
+    .msg-preview { font-size: 0.85rem; color: #64748b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .msg-date { font-size: 0.75rem; color: #94a3b8; margin-left: 10px; white-space: nowrap; }
+    
+    /* 뱃지 (교수, 학우 등) */
+    .sender-badge { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; font-weight: 500; }
+    .badge-prof { background: #dbeafe; color: #1e40af; }
+    .badge-dept { background: #f3f4f6; color: #4b5563; }
+
+    /* [추가] 학사일정 전용 스타일 (달력 크게, 리스트 작게) */
+    .calendar-view-container {
+        display: grid;
+        grid-template-columns: 2.5fr 1fr; /* 달력(2.5) : 리스트(1) 비율 */
+        gap: 20px;
+        height: 800px; /* 전체 높이 고정 */
+    }
+
+    /* 1. 대형 달력 스타일 */
+    .big-calendar-card {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 25px;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .cal-nav {
+        display: flex; justify-content: center; align-items: center; gap: 20px;
+        margin-bottom: 20px;
+    }
+    .cal-title { font-size: 1.5rem; font-weight: 800; color: #1e293b; }
+    .cal-btn { cursor: pointer; padding: 5px; border-radius: 50%; transition: 0.2s; }
+    .cal-btn:hover { background: #f1f5f9; }
+
+    /* 요일 및 날짜 그리드 */
+    .cal-table {
+        width: 100%; flex: 1;
+        display: grid; grid-template-columns: repeat(7, 1fr);
+        grid-auto-rows: 1fr; /* 균등 분할 */
+    }
+    .cal-head { 
+        text-align: center; font-weight: 600; color: #64748b; padding-bottom: 10px; 
+    }
+    .cal-day {
+        background: #fff;
+        padding: 5px; /* 패딩을 줄여서 공간 확보 */
+        cursor: pointer;
+        position: relative;
+        transition: 0.2s;
+        display: flex; 
+        flex-direction: column; 
+        align-items: flex-start; /* 왼쪽 정렬 */
+        justify-content: flex-start;
+        font-weight: 500; 
+        color: #334155;
+        height: 80px !important; /* 높이를 좀 더 키워서 일정 들어갈 공간 확보 */
+        overflow: hidden; /* 넘치는 내용 숨김 */
+    }
+    /* 날짜 숫자 */
+    .cal-day span { 
+        font-size: 0.9rem; 
+        margin-bottom: 2px; 
+        margin-left: 2px;
+        z-index: 2;
+    }
+
+    /* [NEW] 일정 띠 (Bar) 스타일 */
+    .event-bar {
+        width: 100%;
+        font-size: 0.7rem;
+        padding: 2px 4px;
+        margin-bottom: 2px;
+        border-radius: 3px;
+        color: white;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        position: relative;
+        z-index: 1;
+        line-height: 1.2;
+    }
+    
+    /* 중요 일정 (빨강) */
+    .event-bar.urgent { background-color: #ef4444; }
+    /* 일반 일정 (파랑) */
+    .event-bar.normal { background-color: #3b82f6; }
+    
+    /* 연속된 일정 느낌 주기 (투명도 조절) */
+    .event-bar.continue { opacity: 0.8; }
+    .cal-day:hover { background: #f8fafc; }
+    .cal-day.today { color: #2563eb; font-weight: 700; }
+    /* 오늘 날짜 표시 (숫자에 동그라미) */
+    .cal-day.today span {
+        background: #243777; color: white;
+        width: 24px; height: 24px;
+        display: flex; align-items: center; justify-content: center;
+        border-radius: 50%;
+    }
+    .cal-day.selected { background: #eff6ff; border-radius: 8px; border: 1px solid #2563eb; }
+    
+    /* 일정 점 표시 */
+    .event-dot {
+        width: 6px; height: 6px; background: #ef4444; border-radius: 50%;
+        margin-top: 4px; display: none;
+    }
+    .cal-day.has-event .event-dot { display: block; }
+
+    /* 2. 우측 일정 리스트 */
+    .schedule-panel {
+        background: #fff;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        display: flex; flex-direction: column;
+    }
+    .panel-date { font-size: 1.1rem; font-weight: 700; color: #1e293b; border-bottom: 2px solid #1e293b; padding-bottom: 10px; margin-bottom: 15px; }
+    .event-list { overflow-y: auto; flex: 1; }
+    .event-card {
+        padding: 12px; background: #f8fafc; border-radius: 8px; margin-bottom: 10px; border-left: 4px solid #cbd5e1;
+    }
+    .event-card.urgent { border-left-color: #ef4444; background: #fef2f2; }
+    .event-title { font-size: 0.9rem; font-weight: 600; display: block; margin-bottom: 4px;}
+    .event-dday { font-size: 0.75rem; color: #64748b; font-weight: 500; }
+
+    /* =========================================
+       [추가] 출결현황 페이지 스타일
+       ========================================= */
+    
+    /* 1. 상단 요약 영역 */
+    .att-summary-container {
+        display: grid; grid-template-columns: 1fr 2fr; gap: 20px;
+        margin-bottom: 24px;
+    }
+    .att-chart-card {
+        background: white; border-radius: 16px; padding: 20px;
+        border: 1px solid #e2e8f0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .att-stat-grid {
+        display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px;
+    }
+    .att-stat-item {
+        background: white; border-radius: 16px; padding: 20px;
+        border: 1px solid #e2e8f0; display: flex; flex-direction: column;
+        align-items: center; justify-content: center;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.02);
+    }
+    .stat-label { font-size: 0.9rem; color: #64748b; margin-bottom: 5px; }
+    .stat-value { font-size: 1.8rem; font-weight: 800; color: #1e293b; }
+
+    /* 2. 과목별 리스트 */
+    .att-subject-list { display: flex; flex-direction: column; gap: 15px; }
+    
+    .att-subject-card {
+        background: white; border: 1px solid #e2e8f0; border-radius: 12px;
+        overflow: hidden; transition: 0.2s;
+    }
+    .att-card-header {
+        padding: 20px; cursor: pointer;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .att-card-header:hover { background: #f8fafc; }
+    
+    .att-sub-info { display: flex; flex-direction: column; gap: 4px; }
+    .att-sub-name { font-size: 1rem; font-weight: 700; color: #1e293b; }
+    .att-sub-prof { font-size: 0.8rem; color: #64748b; }
+
+    /* 출석률 게이지 바 */
+    .att-progress-wrapper { width: 150px; text-align: right; }
+    .att-progress-bg { width: 100%; height: 8px; background: #f1f5f9; border-radius: 4px; overflow: hidden; margin-top: 5px; }
+    .att-progress-fill { height: 100%; border-radius: 4px; background: #10b981; transition: width 0.5s; }
+    .att-percent { font-size: 0.9rem; font-weight: 700; color: #10b981; }
+
+    /* 3. 주차별 상세 (펼쳐지는 부분) */
+    .att-detail-view {
+        display: none; /* 기본 숨김 */
+        background: #f8fafc;
+        padding: 20px;
+        border-top: 1px dashed #e2e8f0;
+    }
+    .att-detail-view.open { display: block; animation: slideDown 0.3s; }
+    @keyframes slideDown { from { opacity: 0; transform: translateY(-10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .week-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+        gap: 10px;
+    }
+    .week-item {
+        background: white; border: 1px solid #e2e8f0; border-radius: 8px;
+        padding: 10px 5px; text-align: center;
+        display: flex; flex-direction: column; gap: 5px;
+    }
+    .week-num { font-size: 0.7rem; color: #94a3b8; }
+    
+    /* 상태 뱃지 */
+    .status-badge {
+        font-size: 0.8rem; font-weight: 700;
+        width: 32px; height: 32px; border-radius: 50%;
+        display: flex; align-items: center; justify-content: center;
+        margin: 0 auto;
+    }
+    .st-present { background: #dcfce7; color: #16a34a; } /* 출석 */
+    .st-absent { background: #fee2e2; color: #ef4444; } /* 결석 */
+    .st-late { background: #fef9c3; color: #ca8a04; } /* 지각 */
+    .st-video { background: #f3e8ff; color: #7e22ce; border: 1px solid #d8b4fe; } /* 영상 */
+    .st-cancel { background: #f1f5f9; color: #64748b; text-decoration: line-through; } /* 휴강 */
+
+    /* 모바일 */
+    @media (max-width: 700px) {
+        .att-summary-container { grid-template-columns: 1fr; }
+        .att-progress-wrapper { display: none; } /* 모바일엔 게이지 숨김 */
+    }
+
+    /* [추가] 시간표 헤더 학점 뱃지 스타일 */
+    .credit-badge-container {
+        display: flex; align-items: center;
+        margin-left: 12px; /* 제목과 간격 */
+    }
+
+    /* [수정] 학점 뱃지 스타일 (오른쪽 배치용) */
+    .credit-badge {
+        display: flex; align-items: center; justify-content: center;
+        padding: 4px 10px;
+        border-radius: 20px;
+        font-size: 0.75rem; font-weight: 600; color: #64748b;
+        
+        /* 배경 게이지 효과 */
+        background: linear-gradient(to right, #dbeafe 95%, #f1f5f9 95%);
+        border: 1px solid #e2e8f0;
+        box-shadow: inset 0 1px 2px rgba(0,0,0,0.03);
+        
+        /* 높이 강제 고정 (설정 버튼과 줄 맞춤) */
+        height: 26px; 
+        white-space: nowrap; /* 줄바꿈 방지 */
+    }
+
+    .current-credit { color: #2563eb; font-weight: 800; margin-right: 2px; }
+    .max-credit { opacity: 0.7; margin-left: 2px; }
+
+    /* [공지사항 전용 스타일 업데이트] */
+    
+    /* 1. 카테고리 탭 */
+    .notice-tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+        overflow-x: auto; /* 모바일 대응 */
+        padding-bottom: 5px;
+    }
+    .tab-btn {
+        padding: 8px 16px;
+        border-radius: 20px;
+        border: 1px solid #e2e8f0;
+        background: white;
+        color: #64748b;
+        font-size: 0.9rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        white-space: nowrap;
+    }
+    .tab-btn:hover { background: #f1f5f9; }
+    .tab-btn.active {
+        background: #243777;
+        color: white;
+        border-color: #243777;
+        box-shadow: 0 4px 10px rgba(36, 55, 119, 0.2);
+    }
+
+    /* 2. 공지사항 리스트 헤더 */
+    .n-header-row {
+        display: grid;
+        grid-template-columns: 60px 80px 1fr 100px 80px; /* 번호 구분 제목 날짜 조회수 */
+        padding: 12px 15px;
+        background: #f8fafc;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 700;
+        color: #64748b;
+        margin-bottom: 10px;
+        text-align: center;
+    }
+    .n-header-row div:nth-child(3) { text-align: left; padding-left: 10px; } /* 제목은 왼쪽 정렬 */
+
+    /* 3. 공지사항 리스트 아이템 */
+    .n-list-wrap { display: flex; flex-direction: column; gap: 8px; }
+    
+    .n-row {
+        display: grid;
+        grid-template-columns: 60px 80px 1fr 100px 80px;
+        align-items: center;
+        padding: 15px;
+        background: white;
+        border: 1px solid #f1f5f9;
+        border-radius: 12px;
+        transition: all 0.2s ease;
+        cursor: pointer;
+    }
+    .n-row:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.03);
+        border-color: #e2e8f0;
+        z-index: 1;
+    }
+    
+    /* 텍스트 스타일 */
+    .n-num { text-align: center; color: #94a3b8; font-size: 0.85rem; }
+    .n-title { 
+        font-size: 0.95rem; font-weight: 600; color: #1e293b; 
+        white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        padding-left: 10px;
+    }
+    .n-date { text-align: center; font-size: 0.85rem; color: #64748b; }
+    .n-views { text-align: center; font-size: 0.8rem; color: #94a3b8; }
+
+    /* [기존 CSS 유지 + 아래 내용 추가/수정] */
+    
+    /* 뱃지 스타일 업데이트 */
+    .n-badge {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 6px;
+        font-size: 0.75rem;
+        font-weight: 700;
+        text-align: center;
+        min-width: 45px; /* 뱃지 너비 일정하게 */
+    }
+    .n-badge.urgent { background: #fee2e2; color: #ef4444; }    /* 중요: 빨강 */
+    .n-badge.academic { background: #e0f2fe; color: #0284c7; }  /* 학사: 파랑 */
+    .n-badge.scholar { background: #fce7f3; color: #be185d; }   /* 장학: 핑크 */
+    
+    /* [NEW] 새로 추가된 카테고리 색상 */
+    .n-badge.career { background: #f3e8ff; color: #7e22ce; }    /* 취업: 보라 */
+    .n-badge.program { background: #dcfce7; color: #15803d; }   /* 비교과: 초록 */
+
+    /* 중요 공지 배경 강조 */
+    .n-row.pinned { background: #fef2f2; border-color: #fecaca; }
+    .n-row.pinned .n-title { color: #b91c1c; font-weight: 700; }
+
+    /* 모바일 대응 */
+    @media (max-width: 700px) {
+        .n-header-row { display: none; } /* 헤더 숨김 */
+        .n-row { 
+            grid-template-columns: 1fr; 
+            gap: 5px; 
+            padding: 15px;
+        }
+        .n-num, .n-views { display: none; }
+        .n-title { padding-left: 0; font-size: 1rem; margin-bottom: 5px; white-space: normal;}
+        .n-info-mobile { display: flex; justify-content: space-between; align-items: center; font-size: 0.8rem; color: #64748b; }
+    }
+
+    /* [수강과목 전용 스타일] 카드 그리드 디자인 */
+    .course-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+        gap: 20px;
+        padding: 5px;
+    }
+
+    .course-card {
+        background: white;
+        border: 1px solid #e2e8f0;
+        border-radius: 16px;
+        padding: 20px;
+        position: relative;
+        transition: all 0.2s ease;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        overflow: hidden;
+    }
+    .course-card:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 10px 20px rgba(36, 55, 119, 0.1);
+        border-color: #cbd5e1;
+    }
+
+    /* 왼쪽 컬러 띠 (전공/교양 구분) */
+    .course-card.major { border-left: 5px solid #2563eb; }
+    .course-card.general { border-left: 5px solid #10b981; }
+
+    /* 카드 상단 */
+    .c-header { margin-bottom: 15px; }
+    .c-badge { 
+        font-size: 0.7rem; font-weight: 700; padding: 4px 8px; border-radius: 6px; 
+        display: inline-block; margin-bottom: 6px;
+    }
+    .c-badge.major { background: #eff6ff; color: #2563eb; }
+    .c-badge.general { background: #f0fdf4; color: #15803d; }
+    
+    .c-title { font-size: 1.1rem; font-weight: 800; color: #1e293b; margin-bottom: 2px; }
+    .c-code { font-size: 0.75rem; color: #94a3b8; font-weight: 500; }
+
+    /* 카드 내용 (아이콘 + 텍스트) */
+    .c-body { display: flex; flex-direction: column; gap: 8px; margin-bottom: 20px; }
+    .c-info { display: flex; align-items: center; gap: 10px; font-size: 0.9rem; color: #475569; }
+    .c-info i { width: 20px; text-align: center; color: #94a3b8; }
+
+    /* 카드 하단 (버튼) */
+    .c-footer { display: flex; gap: 8px; margin-top: auto; }
+    .c-btn {
+        flex: 1;
+        padding: 8px 0;
+        border-radius: 8px;
+        border: 1px solid #e2e8f0;
+        background: #f8fafc;
+        color: #475569;
+        font-size: 0.8rem;
+        font-weight: 600;
+        cursor: pointer;
+        transition: 0.2s;
+        text-align: center;
+    }
+    .c-btn:hover { background: #e2e8f0; color: #1e293b; }
+    .c-btn.primary { background: #eff6ff; color: #2563eb; border-color: #dbeafe; }
+    .c-btn.primary:hover { background: #2563eb; color: white; }
+
+    /* [추가] 토스트 메시지 스타일 */
+    .toast-container {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .toast {
+        background-color: rgba(31, 41, 55, 0.95);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success { border-left: 4px solid #10b981; }
+    .toast-error { border-left: 4px solid #ef4444; }
+
+    /* [AI 챗봇] 스타일 정의 */
+    .chatbot-wrapper {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        z-index: 3000; /* 다른 요소보다 위에 오게 설정 */
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        font-family: 'Pretendard', sans-serif;
+    }
+
+    /* 플로팅 버튼 */
+    .chat-toggle-btn {
+        width: 60px; height: 60px;
+        border-radius: 50%;
+        background: #243777; /* 상명대 블루 */
+        color: white;
+        border: none;
+        box-shadow: 0 4px 15px rgba(36, 55, 119, 0.4);
+        cursor: pointer;
+        transition: transform 0.2s, background 0.2s;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .chat-toggle-btn:hover { transform: scale(1.1); background: #1e293b; }
+    .chat-toggle-btn:active { transform: scale(0.95); }
+
+    /* 채팅창 메인 박스 */
+    .chat-window {
+        width: 350px;
+        height: 500px;
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+        border: 1px solid #e2e8f0;
+        display: none; /* JS로 토글 */
+        flex-direction: column;
+        overflow: hidden;
+        margin-bottom: 20px;
+        animation: slideUpChat 0.3s ease-out;
+    }
+    @keyframes slideUpChat { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* 헤더 */
+    .chat-header {
+        background: #243777;
+        color: white;
+        padding: 15px 20px;
+        display: flex; justify-content: space-between; align-items: center;
+    }
+    .chat-bot-icon {
+        width: 35px; height: 35px; background: white; color: #243777;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+    }
+    .chat-close-btn { background: none; border: none; color: white; cursor: pointer; opacity: 0.8; }
+    .chat-close-btn:hover { opacity: 1; }
+
+    /* 채팅 바디 */
+    .chat-body {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background: #f8fafc;
+        display: flex; flex-direction: column; gap: 15px;
+    }
+
+    /* 메시지 버블 */
+    .chat-msg { display: flex; width: 100%; }
+    .chat-msg.user { justify-content: flex-end; }
+    .chat-msg.bot { justify-content: flex-start; }
+
+    .chat-bubble {
+        max-width: 80%;
+        padding: 10px 14px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        position: relative;
+        word-break: break-word;
+    }
+    .chat-msg.bot .chat-bubble {
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        border-top-left-radius: 0;
+    }
+    .chat-msg.user .chat-bubble {
+        background: #243777;
+        color: white;
+        border-top-right-radius: 0;
+        box-shadow: 0 2px 5px rgba(36, 55, 119, 0.2);
+    }
+
+    /* 로딩 애니메이션 (점 3개) */
+    .typing-indicator span {
+        display: inline-block; width: 5px; height: 5px; background: #94a3b8;
+        border-radius: 50%; animation: typing 1.4s infinite ease-in-out both; margin: 0 1px;
+    }
+    .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+    .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+    @keyframes typing { 0%, 80%, 100% { transform: scale(0); } 40% { transform: scale(1); } }
+
+    /* 푸터 (입력창) */
+    .chat-footer {
+        padding: 10px 15px;
+        background: white;
+        border-top: 1px solid #e2e8f0;
+        display: flex; gap: 10px; align-items: center;
+    }
+    #chatInput {
+        flex: 1; padding: 10px 12px;
+        border: 1px solid #e2e8f0; border-radius: 20px;
+        background: #f1f5f9; outline: none; font-size: 0.9rem;
+    }
+    #chatInput:focus { background: white; border-color: #243777; }
+    .chat-send-btn {
+        background: none; border: none; color: #243777;
+        cursor: pointer; padding: 5px; transition: 0.2s;
+    }
+    .chat-send-btn:hover { transform: scale(1.1); color: #1e293b; }
+
+    /* 모바일 반응형 */
+    @media (max-width: 480px) {
+        .chat-window { width: 90vw; height: 70vh; right: 5vw; bottom: 80px; }
+    }
+
+    /* [쪽지 상세] 말풍선 스타일 */
+    .dm-msg { display: flex; width: 100%; margin-bottom: 5px; }
+    .dm-msg.received { justify-content: flex-start; }
+    .dm-msg.sent { justify-content: flex-end; }
+
+    .dm-bubble {
+        /* max-width 제거 (JS에서 85%로 제어) */
+        width: fit-content; /* 내용물만큼만 너비 차지 */
+        padding: 12px 16px;
+        border-radius: 16px;
+        font-size: 0.95rem;
+        line-height: 1.5;
+        position: relative;
+        
+        /* ▼▼▼ [핵심] 줄바꿈 및 공백 처리 개선 ▼▼▼ */
+        word-break: break-word;  /* 긴 단어는 줄바꿈, 아니면 유지 */
+        white-space: pre-wrap;   /* 사용자가 입력한 줄바꿈(엔터) 반영 */
+        
+        box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+    }
+    
+    /* 받은 메시지 (흰색) */
+    .dm-msg.received .dm-bubble {
+        background: white;
+        border: 1px solid #e2e8f0;
+        color: #334155;
+        border-top-left-radius: 2px;
+    }
+
+    /* 보낸 메시지 (파란색) */
+    .dm-msg.sent .dm-bubble {
+        background: #3b82f6; /* 조금 더 밝은 파랑 */
+        color: white;
+        border-top-right-radius: 2px;
+        box-shadow: 0 4px 10px rgba(59, 130, 246, 0.2);
+    }
+
+    .dm-time {
+        font-size: 0.7rem;
+        color: #94a3b8;
+        margin-top: 5px;
+        padding: 0 5px;
+    }
+    .dm-msg.sent .dm-time { text-align: right; }
+  </style>
+
+</head>
+<body>
+    <div id="syllabusModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:2000; align-items:center; justify-content:center;">
+        <div style="background:white; width:95%; max-width:700px; border-radius:16px; overflow:hidden; box-shadow:0 15px 30px rgba(0,0,0,0.2); animation:fadeIn 0.2s; display:flex; flex-direction:column; max-height:85vh;">
+            
+            <div style="background:#243777; color:white; padding:20px 25px; display:flex; justify-content:space-between; align-items:center; flex-shrink:0;">
+                <div>
+                    <span style="background:rgba(255,255,255,0.2); font-size:0.75rem; padding:2px 8px; border-radius:4px; margin-right:6px;" id="sylCode">SWE3002</span>
+                    <h3 style="margin:5px 0 0 0; font-size:1.2rem; font-weight:700;" id="sylTitle">과목명</h3>
+                </div>
+                <button onclick="closeSyllabus()" style="background:none; border:none; color:white; font-size:1.8rem; cursor:pointer; line-height:1;">&times;</button>
+            </div>
+
+            <div style="padding:30px; overflow-y:auto; flex:1;">
+                
+                <h4 style="color:#1e293b; margin-bottom:12px; font-size:1rem; border-left:4px solid #243777; padding-left:10px;">기본 정보</h4>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap:15px; background:#f8fafc; padding:15px; border-radius:10px; margin-bottom:25px;">
+                    <div>
+                        <div style="font-size:0.8rem; color:#64748b;">담당교수</div>
+                        <div style="font-weight:700; color:#1e293b;" id="sylProf">홍길동</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:#64748b;">학점/시간</div>
+                        <div style="font-weight:700; color:#1e293b;" id="sylCredit">3학점</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:#64748b;">강의실</div>
+                        <div style="font-weight:700; color:#1e293b;" id="sylRoom">I718I</div>
+                    </div>
+                    <div>
+                        <div style="font-size:0.8rem; color:#64748b;">이수구분</div>
+                        <div style="font-weight:700; color:#2563eb;" id="sylType">전공필수</div>
+                    </div>
+                    <div style="grid-column: 1 / -1;">
+                        <div style="font-size:0.8rem; color:#64748b;">이메일</div>
+                        <div style="font-weight:700; color:#1e293b;" id="sylEmail">professor@smu.ac.kr</div>
+                    </div>
+                </div>
+
+                <h4 style="color:#1e293b; margin-bottom:12px; font-size:1rem; border-left:4px solid #243777; padding-left:10px;">강의 개요 및 목표</h4>
+                <p style="color:#475569; line-height:1.6; font-size:0.95rem; margin-bottom:25px; white-space: pre-line;" id="sylDesc">
+                    내용 로딩 중...
+                </p>
+
+                <h4 style="color:#1e293b; margin-bottom:12px; font-size:1rem; border-left:4px solid #243777; padding-left:10px;">평가 방법</h4>
+                <div style="display:flex; gap:2px; margin-bottom:25px; background:#e2e8f0; border-radius:8px; overflow:hidden; text-align:center;">
+                    <div style="flex:1; background:white; padding:10px;">
+                        <div style="font-size:0.8rem; color:#64748b;">중간고사</div>
+                        <div style="font-weight:800; color:#2563eb;" id="evalMid">30%</div>
+                    </div>
+                    <div style="flex:1; background:white; padding:10px;">
+                        <div style="font-size:0.8rem; color:#64748b;">기말고사</div>
+                        <div style="font-weight:800; color:#2563eb;" id="evalFinal">30%</div>
+                    </div>
+                    <div style="flex:1; background:white; padding:10px;">
+                        <div style="font-size:0.8rem; color:#64748b;">과제</div>
+                        <div style="font-weight:800; color:#2563eb;" id="evalTask">20%</div>
+                    </div>
+                    <div style="flex:1; background:white; padding:10px;">
+                        <div style="font-size:0.8rem; color:#64748b;">출석</div>
+                        <div style="font-weight:800; color:#2563eb;" id="evalAtt">20%</div>
+                    </div>
+                </div>
+
+                <h4 style="color:#1e293b; margin-bottom:12px; font-size:1rem; border-left:4px solid #243777; padding-left:10px;">주교재</h4>
+                <div style="background:#f0fdf4; padding:12px 15px; border-radius:8px; border:1px solid #bbf7d0; color:#166534; font-weight:600; font-size:0.9rem;" id="sylBook">
+                    교재 정보 없음
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+  <div class="mobile-overlay" id="mobileOverlay"></div>
+
+  <div class="layout" id="layout">
+    
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-header">
+        <div class="logo-area" id="logoBtn" data-title="홈으로 이동">
+          <img src="smu_logo3.jpg" class="logo-img" alt="로고">
+          <div class="logo-text">
+            상명대학교<br><span>샘물 포털 시스템</span>
+          </div>
+        </div>
+        <button class="toggle-btn" id="toggleBtn">
+            <span class="material-symbols-outlined" style="font-size:16px;">first_page</span>
+        </button>
+      </div>
+
+      <div class="menu-title">SMU-STUDENT</div>
+      <nav class="nav-list">
+
+        <li class="nav-item active" data-target="dashboard" data-title="홈">
+          <span class="material-symbols-outlined icon">home</span>
+          <span class="label">홈</span>
+        </li>
+        <li class="nav-item" data-target="integratedinfo" data-title="통합정보">
+          <span class="material-symbols-outlined icon">grid_view</span>
+          <span class="label">통합정보</span>
+        </li>
+        
+        <li class="nav-item" data-target="ecampus" data-title="e-Campus">
+          <span class="material-symbols-outlined icon">cast_for_education</span>
+          <span class="label">E-Campus</span>
+        </li>
+        <li class="nav-item" data-target="courses" data-title="수강과목">
+          <span class="material-symbols-outlined icon">book_2</span>
+          <span class="label">수강과목</span>
+        </li>
+        <li class="nav-item" data-target="grades" data-title="성적조회">
+          <span class="material-symbols-outlined icon">bar_chart</span>
+          <span class="label">성적조회</span>
+        </li>
+        <li class="nav-item" data-target="notices" data-title="공지사항">
+          <span class="material-symbols-outlined icon">notifications</span>
+          <span class="label">공지사항</span>
+          <span class="nav-dot"></span>
+        </li>
+        <li class="nav-item" data-target="attendance" data-title="출결현황">
+          <span class="material-symbols-outlined icon">co_present</span>
+          <span class="label">출결현황</span>
+        </li>
+      </nav>
+
+      <div class="menu-title">UNIV-EVENT</div>
+      <nav class="nav-list">
+        <li class="nav-item" data-target="calendar" data-title="학사일정">
+          <span class="material-symbols-outlined icon">calendar_month</span>
+          <span class="label">학사일정</span>
+
+        </li>
+        
+        
+
+      </nav>
+
+      <div class="sidebar-footer">© Sangmyung Univ.</div>
+    </aside>
+
+    <div class="main">
+      <header class="header">
+        <div class="header-left">
+          <button class="mobile-menu-btn" id="mobileMenuBtn">☰</button>
+          <div class="search-container">
+            <span class="material-symbols-outlined search-icon">search</span>
+            <input type="text" class="search-input" placeholder="메뉴, 공지사항 검색">
+          </div>
+        </div>
+        
+        <div class="header-right">
+            <div class="session-timer">
+                <span class="material-symbols-outlined" style="font-size:16px;">schedule</span>
+                <span id="timerText">29:59</span>
+                <button class="btn-extend" onclick="resetTimer()">연장</button>
+            </div>
+
+          <div class="user-info-text">
+              <span class="info-major">소프트웨어학과</span>
+          </div>
+
+          <div class="profile-container" onclick="toggleDropdown()">
+             <div class="profile-wrapper">
+                 <div class="avatar-wrapper">
+                    <img src="수뭉이.jpg" class="avatar" alt="프로필">
+                    <span class="avatar-badge"></span>
+                 </div>
+                 <span class="user-name">수뭉이 님</span>
+                 <span class="material-symbols-outlined" style="font-size:18px; color:#94a3b8;">expand_more</span>
+             </div>
+             
+             <div class="dropdown-menu" id="userDropdown">
+                  <div class="dropdown-item" onclick="showView('messages'); toggleDropdown();">
+                     <span class="material-symbols-outlined">mail</span> 메세지
+                     <span class="badge-dot" id="msgBadge"></span>
+                 </div>
+                 <div class="dropdown-divider"></div>
+                 <div class="dropdown-item text-danger" onclick="logout()">
+                     <span class="material-symbols-outlined">logout</span> 로그아웃
+                 </div>
+             </div>
+          </div>
+        </div>
+      </header>
+
+      <div class="content-body">
+        
+        <div id="view-dashboard" class="view-section active">
+          <div class="dashboard-grid">
+            
+            <div class="left-column">
+              <section class="card grade-card" style="padding:0;">
+                <div class="grade-header-bg" style="padding-bottom: 20px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <h3 style="color:#1e2933; font-size:1.1rem; margin:0; font-weight:700;">내 성적표</h3>
+                        <select id="semesterSelect" class="transparent-select">
+                            <option value="2025-1">2025-1학기</option>
+                            <option value="2024-2">2024-2학기</option>
+                            <option value="2024-1">2024-1학기</option>
+                            <option value="2023-2">2023-2학기</option>
+                            <option value="2023-1">2023-1학기</option>
+                            <option value="2022-2">2022-2학기</option>
+                            <option value="2022-1">2022-1학기</option>
+                        </select>
+                    </div>
+                    <div class="grade-header-content">
+                        <div>
+                            <div style="color:#64748b; font-size:0.8rem; font-weight:600;">평점 평균</div>
+                            <div style="font-size:2.2rem; font-weight:800; color:#243777; line-height:1.1;" id="gpaScore">4.50</div>
+                            <div class="rank-badge" id="rankText">학과 석차 1 / 45</div>
+                        </div>
+                        <div class="chart-container" id="gpaChart">
+                            <div class="chart-inner">
+                                <span class="material-symbols-outlined" style="font-size:28px; color:#243777;">school</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="grade-list-area">
+                    <div style="font-size:0.75rem; color:#94a3b8; margin-bottom:12px; font-weight:600; letter-spacing:0.5px;">과목별 상세</div>
+                    <ul class="modern-grade-list" id="gradeList"></ul>
+                </div>
+              </section>
+
+              <section class="card">
+                <div class="card-header">
+                  <div class="card-title">이수 학점 현황</div>
+                  <div class="card-link" onclick="showView('grades')">자세히 ></div>
+                </div>
+                <div class="graph-wrapper">
+                    <div class="donut-chart" style="background: conic-gradient(#243777 0% 85%, #f1f5f9 85% 100%);">
+                        <div class="donut-hole">
+                            <span class="donut-percent">85%</span>
+                            <span class="donut-text">110 / 130</span>
+                        </div>
+                    </div>
+                    <div class="graph-details">
+                        <div class="detail-item">
+                            <div class="detail-header">
+                                <span>전공 (필수+선택)</span>
+                                <span class="detail-score"><span style="color:#3b82f6">60</span> / 75</span>
+                            </div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 80%; background: #3b82f6;"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-header">
+                                <span>교양 (필수+선택)</span>
+                                <span class="detail-score"><span style="color:#10b981">36</span> / 36</span>
+                            </div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 100%; background: #10b981;"></div>
+                            </div>
+                        </div>
+                        <div class="detail-item">
+                            <div class="detail-header">
+                                <span>일반선택</span>
+                                <span class="detail-score"><span style="color:#f59e0b">14</span> / 19</span>
+                            </div>
+                            <div class="mini-track">
+                                <div class="mini-fill" style="width: 73%; background: #f59e0b;"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+              </section>
+
+              <div class="card">
+                <div class="card-header">
+                  <div class="card-title">최신 공지</div>
+                  <div class="card-link" onclick="showView('notices')">더보기</div>
+                </div>
+                <ul class="notice-list">
+                    <li class="notice-item">
+                        <div><span class="notice-tag" style="background:#e0f2fe; color:#0284c7;">학사</span> 2025-2학기 중간고사 안내</div>
+                        <span class="notice-date">10.05</span>
+                    </li>
+                    <li class="notice-item">
+                        <div><span class="notice-tag" style="background:#fce7f3; color:#be185d;">장학</span> 성적우수 장학금 신청 안내</div>
+                        <span class="notice-date">10.03</span>
+                    </li>
+                    <li class="notice-item">
+                        <div><span class="notice-tag" style="background:#fef3c7; color:#d97706;">수업</span> [컴퓨터비전] 강의실 변경</div>
+                        <span class="notice-date">10.02</span>
+                    </li>
+                </ul>
+              </div>
+            </div> 
+            
+            <div class="right-column">
+              <div class="card" style="height: 100%;">
+                <div class="card-header">
+                  <div class="card-title">주간 시간표</div>
+                  <div style="display:flex; align-items:center; gap:10px;">
+                      <div class="credit-badge" title="최대 19학점 중 18학점 신청됨">
+                          <span class="current-credit">18</span> / <span class="max-credit">19</span> 학점
+                      </div>
+                      <div style="width:1px; height:12px; background:#e2e8f0;"></div>
+                      <div class="card-link" onclick="showView('courses')">설정</div>
+                  </div>
+                </div>
+                <div class="timetable-wrapper">
+                    <div class="timetable-grid grid-background">
+                        <div class="bg-header"></div><div class="bg-header">월</div><div class="bg-header">화</div><div class="bg-header">수</div><div class="bg-header">목</div><div class="bg-header">금</div>
+                        <div class="bg-time">9</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">10</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">11</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">12</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">1</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">2</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">3</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">4</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                        <div class="bg-time">5</div> <div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div><div class="bg-cell"></div>
+                    </div>
+                    <div class="timetable-grid grid-content">
+                        <div class="class-block" style="grid-column: 2; grid-row: 6 / 9; background:#f3e8ff; color:#7e22ce; border:1px solid #d8b4fe; cursor:pointer;" onclick="showSyllabus('이산수학')">
+                            <strong>이산수학</strong>I109
+                        </div>
+                        <div class="class-block" style="grid-column: 3; grid-row: 2 / 5; background:#eff6ff; color:#1d4ed8; border:1px solid #bfdbfe; cursor:pointer;" onclick="showSyllabus('알고리즘(PBL)')">
+                            <strong>알고리즘(PBL)</strong>I718I
+                        </div>
+                        <div class="class-block" style="grid-column: 3; grid-row: 5 / 8; background:#fff1f2; color:#be123c; border:1px solid #fecdd3; cursor:pointer;" onclick="showSyllabus('예술세계의<br>탐구')">
+                            <strong>예술세계의<br>탐구</strong>I311
+                        </div>
+                        <div class="class-block" style="grid-column: 4; grid-row: 2 / 5; background:#ecfeff; color:#0e7490; border:1px solid #a5f3fc; cursor:pointer;" onclick="showSyllabus('알고리즘<br>실습(PBL)')">
+                            <strong>알고리즘<br>실습(PBL)</strong>I718I
+                        </div>
+                        <div class="class-block" style="grid-column: 4; grid-row: 6 / 9; background:#eef2ff; color:#4338ca; border:1px solid #c7d2fe; cursor:pointer;" onclick="showSyllabus('데이터베이스')">
+                            <strong>데이터베이스</strong>I110
+                        </div>
+                        <div class="class-block" style="grid-column: 5; grid-row: 6 / 9; background:#fff7ed; color:#c2410c; border:1px solid #fed7aa; cursor:pointer;" onclick="showSyllabus('HCI(PBL)')">
+                            <strong>HCI(PBL)</strong>N203
+                        </div>
+                    </div>
+                </div>
+              </div>
+              
+              <div class="card">
+                <div class="quick-grid">
+                   <div class="quick-item" onclick="window.open('https://lib.smu.ac.kr','_blank')">
+                     <div class="quick-icon" style="background:#eff6ff; color:#2563eb;"><i class="fa-solid fa-book"></i></div>
+                     <span class="quick-text">도서관</span>
+                   </div>
+                   <div class="quick-item" onclick="window.open('https://portal.office.com','_blank')">
+                     <div class="quick-icon" style="background:#fff1f2; color:#e11d48;"><i class="fa-brands fa-microsoft" style="font-size: 1.4rem;"></i></div>
+                     <span class="quick-text">Office-365</span>
+                   </div>
+                   <div class="quick-item">
+                     <div class="quick-icon" style="background:#fff7ed; color:#ea580c;"><i class="fa-regular fa-calendar-check"></i></div>
+                     <span class="quick-text">시설예약</span>
+                   </div>
+                   <div class="quick-item">
+                     <div class="quick-icon" style="background:#f1f5f9; color:#475569;"><i class="fa-solid fa-plus"></i></div>
+                     <span class="quick-text">더보기</span>
+                   </div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <div id="view-courses" class="view-section">
+            <div class="card" style="background: transparent; box-shadow: none; padding: 0; border: none;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px; padding: 0 5px;">
+                    <div style="display:flex; align-items:center; gap:15px;">
+                        <div class="card-title">수강 목록</div>
+                        <select id="courseSemesterSelect" class="transparent-select" style="background:white;" onchange="renderCourseCards()">
+                            <option value="2025-1">2025년 1학기 (재학)</option>
+                            <option value="2024-2">2024년 2학기 (휴학)</option>
+                            <option value="2024-1">2024년 1학기 (휴학)</option>
+                            <option value="2023-2">2023년 2학기 (휴학)</option>
+                            <option value="2023-1">2023년 1학기 (휴학)</option>
+                            <option value="2022-2">2022년 2학기 (1학년)</option>
+                            <option value="2022-1">2022년 1학기 (1학년)</option>
+                        </select>
+                    </div>
+                    
+                    <div id="courseActionBtns" style="display:flex; gap:8px;">
+                        <button style="background:white; border:1px solid #e2e8f0; padding:6px 12px; border-radius:8px; font-size:0.85rem; cursor:pointer; display:flex; align-items:center; gap:5px;">
+                            <i class="fa-solid fa-print"></i> 시간표 출력
+                        </button>
+                    </div>
+                </div>
+
+                <div id="courseLeaveMsgBox" style="display:none; text-align:center; padding:80px 0; color:#94a3b8; background:white; border-radius:16px; border:1px solid #e2e8f0;">
+                    <span class="material-symbols-outlined" style="font-size:48px; margin-bottom:15px; color:#cbd5e1;">flight_takeoff</span>
+                    <div style="font-size:1.1rem; font-weight:700; color:#64748b;">해당 학기는 휴학 상태입니다.</div>
+                    <div style="font-size:0.9rem; margin-top:5px;">수강 신청한 내역이 없습니다.</div>
+                </div>
+
+                <div id="courseCardArea" class="course-grid">
+                    </div>
+            </div>
+        </div>
+
+        <div id="view-grades" class="view-section">
+            <div class="card" style="padding: 20px;">
+                <div class="card-header">
+                    <div class="card-title">성적 상세 조회</div>
+                    <select id="gradePageSelect" class="transparent-select" onchange="renderGradeDetailTable()">
+                        <option value="2025-1">2025년 1학기 (재학)</option>
+                        <option value="2024-2">2024년 2학기 (휴학)</option>
+                        <option value="2024-1">2024년 1학기 (휴학)</option>
+                        <option value="2023-2">2023년 2학기 (휴학)</option>
+                        <option value="2023-1">2023년 1학기 (휴학)</option>
+                        <option value="2022-2">2022년 2학기 (1학년)</option>
+                        <option value="2022-1">2022년 1학기 (1학년)</option>
+                    </select>
+                </div>
+
+                <div id="leaveMsgBox" style="display:none; text-align:center; padding:50px 0; color:#94a3b8;">
+                    <span class="material-symbols-outlined" style="font-size:48px; margin-bottom:10px;">flight_takeoff</span>
+                    <div style="font-size:1.1rem; font-weight:700;">해당 학기는 휴학 상태입니다.</div>
+                    <div style="font-size:0.9rem;">수강한 과목 및 성적 데이터가 없습니다.</div>
+                </div>
+
+                <div id="gradeTableContainer">
+                    <table class="grade-table">
+                        <thead>
+                            <tr>
+                                <th>과목명</th>
+                                <th style="text-align:center;">이수</th>
+                                <th style="text-align:center;">학점</th>
+                                <th style="text-align:center;">등급</th>
+                                <th style="text-align:center; color:#2563eb;">분반석차</th> 
+                                <th style="text-align:center; color:#2563eb;">학과석차</th> 
+                            </tr>
+                        </thead>
+                        <tbody id="gradeTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        
+    <div id="view-notices" class="view-section">
+        <div class="card" style="padding: 25px; min-height: 600px; display:flex; flex-direction:column;">
+            
+            <div id="noticeListSection">
+                <div class="card-header" style="border-bottom:none; margin-bottom:10px;">
+                    <div class="card-title">공지사항</div>
+                    <div style="display:flex; gap:8px;">
+                        <input type="text" placeholder="제목 검색" style="padding:8px 12px; border:1px solid #e2e8f0; border-radius:8px; font-size:0.9rem; outline:none; width:200px;">
+                        <button style="background:#243777; color:white; border:none; padding:8px 15px; border-radius:8px; font-size:0.9rem; font-weight:600; cursor:pointer;">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="notice-tabs">
+                    <button class="tab-btn active" onclick="filterNotices('all', this)">전체</button>
+                    <button class="tab-btn" onclick="filterNotices('academic', this)">학사</button>
+                    <button class="tab-btn" onclick="filterNotices('scholar', this)">장학</button>
+                    <button class="tab-btn" onclick="filterNotices('career', this)">취업·진로</button>
+                    <button class="tab-btn" onclick="filterNotices('program', this)">비교과</button>
+                </div>
+
+                <div class="n-header-row">
+                    <div>No</div>
+                    <div>구분</div>
+                    <div>제목</div>
+                    <div>작성일</div>
+                    <div>조회</div>
+                </div>
+
+                <div id="noticeListArea" class="n-list-wrap">
+                    </div>
+
+                <div style="display:flex; justify-content:center; gap:10px; margin-top:25px;">
+                    <button style="border:none; background:white; color:#cbd5e1; cursor:pointer;"><i class="fa-solid fa-chevron-left"></i></button>
+                    <button style="border:none; background:#243777; color:white; width:30px; height:30px; border-radius:50%; font-weight:700;">1</button>
+                    <button style="border:none; background:white; color:#64748b; width:30px; height:30px; border-radius:50%; font-weight:600; cursor:pointer;">2</button>
+                    <button style="border:none; background:white; color:#64748b; width:30px; height:30px; border-radius:50%; font-weight:600; cursor:pointer;">3</button>
+                    <button style="border:none; background:white; color:#64748b; cursor:pointer;"><i class="fa-solid fa-chevron-right"></i></button>
+                </div>
+            </div>
+
+            <div id="noticeDetailSection" style="display:none; flex-direction:column; animation: fadeIn 0.3s;">
+                <div style="border-bottom:1px solid #e2e8f0; padding-bottom:15px; margin-bottom:20px;">
+                    <button onclick="closeNoticeDetail()" style="background:none; border:none; cursor:pointer; color:#64748b; display:flex; align-items:center; gap:5px; font-size:0.9rem; margin-bottom:10px; padding:0;">
+                        <i class="fa-solid fa-arrow-left"></i> 목록으로
+                    </button>
+                    <div style="display:flex; align-items:center; gap:10px; margin-bottom:8px;">
+                        <span id="ndBadge" class="n-badge" style="font-size:0.8rem;">구분</span>
+                        <h2 id="ndTitle" style="font-size:1.3rem; color:#1e293b; font-weight:800; margin:0;">공지사항 제목</h2>
+                    </div>
+                    <div style="font-size:0.85rem; color:#94a3b8; display:flex; gap:15px;">
+                        <span id="ndDate">2025.03.02</span>
+                        <span>조회수 <span id="ndViews">0</span></span>
+                        <span>작성자: 교무처</span>
+                    </div>
+                </div>
+
+                <div id="ndContent" style="min-height:300px; line-height:1.8; color:#334155; white-space:pre-line; font-size:0.95rem;">
+                    내용이 여기에 표시됩니다.
+                </div>
+                
+                <div style="margin-top:30px; padding:15px; background:#f8fafc; border-radius:8px; border:1px solid #e2e8f0;">
+                    <div style="font-size:0.85rem; font-weight:700; color:#64748b; margin-bottom:8px;">첨부파일</div>
+                    <div style="display:flex; align-items:center; gap:8px; font-size:0.9rem; color:#243777; cursor:pointer;">
+                        <i class="fa-solid fa-paperclip"></i> 
+                        <span>2025학년도_안내문.pdf</span>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+        <div id="view-attendance" class="view-section">
+    <div class="card" style="padding: 20px; margin-bottom: 20px;"> <div class="card-header" style="margin-bottom:10px;">
+            <div class="card-title">학기별 출결 조회</div>
+            <select id="attSemesterSelect" class="transparent-select">
+                <option value="2025-1">2025년 1학기 (재학)</option>
+                <option value="2024-2">2024년 2학기 (휴학)</option>
+                <option value="2024-1">2024년 1학기 (휴학)</option>
+                <option value="2023-2">2023년 2학기 (휴학)</option>
+                <option value="2023-1">2023년 1학기 (휴학)</option>
+                <option value="2022-2">2022년 2학기 (1학년)</option>
+                <option value="2022-1">2022년 1학기 (1학년)</option>
+            </select>
+        </div>
+    </div>
+
+    <div id="attLeaveMsgBox" style="display:none; text-align:center; padding:60px 0; color:#94a3b8;">
+        <span class="material-symbols-outlined" style="font-size:48px; margin-bottom:15px; color:#cbd5e1;">event_busy</span>
+        <div style="font-size:1.1rem; font-weight:700; color:#64748b;">해당 학기는 휴학 상태입니다.</div>
+        <div style="font-size:0.9rem; margin-top:5px;">출결 데이터가 존재하지 않습니다.</div>
+    </div>
+
+    <div id="attContentBox">
+        <div class="att-summary-container">
+            <div class="att-chart-card">
+                <div style="position:relative; width:120px; height:120px; display:flex; align-items:center; justify-content:center;">
+                    <div id="attTotalChart" style="width:100%; height:100%; border-radius:50%; background:conic-gradient(#10b981 0% 95%, #f1f5f9 95% 100%);"></div>
+                    <div style="position:absolute; width:90px; height:90px; background:white; border-radius:50%; display:flex; flex-direction:column; align-items:center; justify-content:center;">
+                        <span style="font-size:0.8rem; color:#64748b;">총 출석률</span>
+                        <span style="font-size:1.4rem; font-weight:800; color:#10b981;" id="attTotalPercent">95%</span>
+                    </div>
+                </div>
+            </div>
+            <div class="att-stat-grid">
+                <div class="att-stat-item">
+                    <span class="stat-label">출석</span>
+                    <span class="stat-value" style="color:#10b981;" id="countPresent">45</span>
+                </div>
+                <div class="att-stat-item">
+                    <span class="stat-label">지각</span>
+                    <span class="stat-value" style="color:#f59e0b;" id="countLate">1</span>
+                </div>
+                <div class="att-stat-item">
+                    <span class="stat-label">결석</span>
+                    <span class="stat-value" style="color:#ef4444;" id="countAbsent">0</span>
+                </div>
+            </div>
+        </div>
+        <div class="att-subject-list" id="attListArea"></div>
+    </div>
+
+    </div>
+        <div id="view-calendar" class="view-section">
+            <div class="calendar-view-container">
+                <div class="big-calendar-card">
+                    <div class="cal-nav">
+                        <span class="material-symbols-outlined cal-btn" onclick="moveMonth(-1)">chevron_left</span>
+                        <span class="cal-title" id="calTitle">2025. 10</span>
+                        <span class="material-symbols-outlined cal-btn" onclick="moveMonth(1)">chevron_right</span>
+                    </div>
+                    <div style="display: grid; grid-template-columns: repeat(7, 1fr); margin-bottom: 10px;">
+                        <div class="cal-head" style="color:#ef4444">일</div>
+                        <div class="cal-head">월</div><div class="cal-head">화</div><div class="cal-head">수</div><div class="cal-head">목</div><div class="cal-head">금</div>
+                        <div class="cal-head" style="color:#3b82f6">토</div>
+                    </div>
+                    <div class="cal-table" id="calendarBody"></div>
+                </div>
+                <div class="schedule-panel">
+                    <div class="panel-date" id="selectedDateTitle">2025.10.20 (월)</div>
+                    <div class="event-list" id="selectedEventList">
+                        <div style="text-align:center; color:#999; margin-top:50px;">일정이 없습니다.</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="view-messages" class="view-section">
+            <div class="card" style="height: 600px; display:flex; flex-direction:column; padding:0; overflow:hidden;">
+                
+                <div id="msgListSection" style="display:flex; flex-direction:column; height:100%;">
+                    <div class="card-header" style="padding:20px; border-bottom:1px solid #f1f5f9;">
+                        <div class="card-title">받은 쪽지함 <span style="font-size:0.9rem; color:#243777; margin-left:5px;">(2)</span></div>
+                        <div class="card-link" style="background:#243777; color:white; padding:6px 12px; border-radius:6px; font-size:0.85rem;">
+                            <i class="fa-solid fa-pen"></i> 쪽지 쓰기
+                        </div>
+                    </div>
+                    
+                    <ul class="message-list" style="padding:10px 20px; overflow-y:auto;">
+                        <li class="message-item unread" onclick="openMsgDetail(1)">
+                            <div class="msg-avatar avatar-prof">U</div>
+                            <div class="msg-content">
+                                <div class="msg-sender">Unknown - 교수님 <span class="sender-badge badge-prof">컴퓨터알고리즘</span></div>
+                                <div class="msg-preview">다음 주 화요일 휴강 관련 보강 일정 안내입니다.</div>
+                            </div>
+                            <div class="msg-date">10:30</div>
+                        </li>
+                        <li class="message-item unread" onclick="openMsgDetail(2)">
+                            <div class="msg-avatar avatar-stud">U</div>
+                            <div class="msg-content">
+                                <div class="msg-sender">Unknown-User <span class="sender-badge badge-dept">학회장</span></div>
+                                <div class="msg-preview">형, 오늘 저녁 6시에 회의 잊지 않으셨죠?</div>
+                            </div>
+                            <div class="msg-date">어제</div>
+                        </li>
+                    </ul>
+                </div>
+
+                <div id="msgDetailSection" style="display:none; flex-direction:column; height:100%;">
+                    <div style="padding:15px 20px; border-bottom:1px solid #e2e8f0; display:flex; align-items:center; gap:15px; background:#fff;">
+                        <button onclick="closeMsgDetail()" style="border:none; background:none; cursor:pointer; color:#64748b;">
+                            <i class="fa-solid fa-arrow-left" style="font-size:1.2rem;"></i>
+                        </button>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <div class="msg-avatar" id="detailAvatar">U</div>
+                            <div>
+                                <div style="font-weight:700; color:#1e293b; font-size:1rem;" id="detailSender">보낸사람</div>
+                                <div style="font-size:0.8rem; color:#64748b;" id="detailRole">직책</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="dmChatBody" style="flex:1; background:#f8fafc; padding:20px; overflow-y:auto; display:flex; flex-direction:column; gap:15px;">
+                        </div>
+
+                    <div style="padding:15px; background:white; border-top:1px solid #e2e8f0; display:flex; gap:10px; align-items:flex-end;">
+                <textarea id="dmInput" placeholder="답장을 입력하세요... (Shift+Enter 줄바꿈)" 
+                       style="flex:1; padding:12px; border:1px solid #e2e8f0; border-radius:12px; outline:none; background:#f8fafc; resize:none; height:50px; font-family:inherit; overflow-y:auto;"
+                       onkeypress="handleDmEnter(event)"></textarea>
+                <button onclick="sendDm()" 
+                        style="background:#243777; color:white; border:none; width:45px; height:45px; border-radius:12px; cursor:pointer; transition:0.2s; flex-shrink:0;">
+                            <i class="fa-solid fa-paper-plane"></i>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div> 
+      
+  </div>
+
+  <div class="toast-container" id="toastContainer"></div>
+
+  <div class="chatbot-wrapper">
+        <div class="chat-window" id="chatWindow">
+            <div class="chat-header">
+                <div style="display:flex; align-items:center; gap:10px;">
+                    <div class="chat-bot-icon">
+                        <img src="수뭉이.jpg" alt="수뭉이" style="width:100%; height:100%; object-fit:cover; border-radius:50%;">
+                    </div>
+                    <div>
+                        <span style="font-size:1rem; font-weight:700;">수뭉이 AI</span>
+                        <span style="font-size:0.75rem; opacity:0.8; display:block;">무엇이든 물어보세요!</span>
+                    </div>
+                </div>
+                <button class="chat-close-btn" onclick="toggleChat()">
+                    <span class="material-symbols-outlined">close</span>
+                </button>
+            </div>
+        
+            <div class="chat-body" id="chatBody">
+                <div class="chat-msg bot">
+                    <div class="chat-bubble">안녕하세요! 상명대학교 AI 도우미 수뭉이입니다. 🦌<br>학사일정, 성적 등 궁금한 점을 물어보세요.</div>
+                </div>
+            </div>
+
+            <div class="chat-footer">
+                <input type="text" id="chatInput" placeholder="메시지를 입력하세요..." onkeypress="handleEnter(event)">
+                <button class="chat-send-btn" onclick="sendMessage()">
+                    <span class="material-symbols-outlined">send</span>
+                </button>
+            </div>
+        </div>
+
+        <button class="chat-toggle-btn" id="chatBtn" onclick="toggleChat()">
+           <span class="material-symbols-outlined" style="font-size:32px;">smart_toy</span>
+        </button>
+    </div>
+
+  <script>
+    // 0. [중요] 로그인 세션 체크 (맨 위에 넣어주세요)
+    // 로그인이 안 된 상태로 접근하면 로그인 화면으로 튕겨냅니다.
+    if (sessionStorage.getItem('isLoggedIn') !== 'true') {
+        alert('로그인이 필요한 서비스입니다.');
+        // replace를 사용하여 현재 페이지 기록을 로그인 페이지로 교체 (뒤로가기 불가)
+        window.location.replace('샘물포털로그인.html'); 
+    }
+
+    // 1. 변수 및 초기 설정
+    const layout = document.getElementById('layout');
+    const sidebar = document.getElementById('sidebar');
+    const toggleBtn = document.getElementById('toggleBtn');
+    const logoBtn = document.getElementById('logoBtn');
+    const navItems = document.querySelectorAll('.nav-item');
+    const viewSections = document.querySelectorAll('.view-section');
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileOverlay = document.getElementById('mobileOverlay');
+
+    // [핵심] 통합 성적 데이터 (22학번, 휴학 포함)
+    const dbGrades = {
+        // 3학년 1학기 (현재)
+        "2025-1": {
+            status: "attending",
+            gpa: "4.3",
+            rank: "3 / 45",
+            list: [
+                { name: "알고리즘(PBL)", prof: "홍길동", type: "전공필수", typeCode: "major", credit: 3, grade: "A+", rankClass: "1 / 30", rankDept: "1 / 45" },
+                { name: "알고리즘 실습(PBL)", prof: "홍길동", type: "전공필수", typeCode: "major", credit: 3, grade: "A+", rankClass: "1 / 30", rankDept: "1 / 45" },
+                { name: "데이터베이스", prof: "이데이터", type: "전공선택", typeCode: "major", credit: 3, grade: "A", rankClass: "3 / 28", rankDept: "5 / 42" },
+                { name: "HCI(PBL)", prof: "이문화", type: "전공선택", typeCode: "major", credit: 3, grade: "A+", rankClass: "2 / 35", rankDept: "2 / 50" },
+                { name: "이산수학", prof: "홍길동", type: "전공필수", typeCode: "major", credit: 3, grade: "A+", rankClass: "1 / 30", rankDept: "1 / 45" },
+                { name: "예술세계의 탐구", prof: "최예술", type: "교양필수", typeCode: "general", credit: 2, grade: "B+", rankClass: "15 / 40", rankDept: "-" }
+            ]
+        },
+        // 휴학 기간 (데이터 없음)
+        "2024-2": { status: "leave" },
+        "2024-1": { status: "leave" },
+        "2023-2": { status: "leave" },
+        "2023-1": { status: "leave" },
+
+        // 1학년 2학기
+        "2022-2": {
+            status: "attending",
+            gpa: "3.92",
+            rank: "5 / 50",
+            list: [
+                { name: "공업수학프로그래밍", prof: "박코딩", type: "전공필수", typeCode: "major", credit: 3, grade: "A+", rankClass: "2 / 40", rankDept: "3 / 50" },
+                 { name: "객체지향프로그래밍(PBL)", prof: "박코딩", type: "전공필수", typeCode: "major", credit: 3, grade: "B+", rankClass: "2 / 40", rankDept: "3 / 50" },
+                { name: "OOP프로그래밍설계", prof: "김수학", type: "전공선택", typeCode: "major", credit: 3, grade: "B+", rankClass: "5 / 35", rankDept: "8 / 50" },
+                { name: "프로그래밍프로젝트", prof: "최개론", type: "전공선택", typeCode: "major", credit: 3, grade: "A+", rankClass: "1 / 45", rankDept: "1 / 50" },
+                { name: "알고리즘과게임콘텐츠", prof: "James", type: "교양필수", typeCode: "general", credit: 2, grade: "B+", rankClass: "10 / 30", rankDept: "-" },
+                { name: "인간과 시간", prof: "Unknown", type: "교양필수", typeCode: "general", credit: 2, grade: "C+", rankClass: "10 / 30", rankDept: "-" }
+            ]
+        },
+        // 1학년 1학기
+        "2022-1": {
+            status: "attending",
+            gpa: "3.56",
+            rank: "12 / 50",
+            list: [
+                { name: "C프로그래밍", prof: "Unknown", type: "전공필수", typeCode: "major", credit: 3, grade: "A", rankClass: "8 / 42", rankDept: "10 / 50" },
+                { name: "IT Engineering프로젝트", prof: "Unknown", type: "전공필수", typeCode: "major", credit: 3, grade: "B+", rankClass: "8 / 42", rankDept: "10 / 50" },
+                { name: "미적분학프로그래밍", prof: "Unkown", type: "전공필수", typeCode: "major", credit: 3, grade: "B", rankClass: "8 / 42", rankDept: "10 / 50" },
+                { name: "컴퓨팅사고와데이터의이해", prof: "Unknown", type: "교양필수", typeCode: "general", credit: 2, grade: "A", rankClass: "3 / 50", rankDept: "-" },
+                { name: "사고와 표현", prof: "Unknown", type: "교양필수", typeCode: "general", credit: 2, grade: "B+", rankClass: "7/30", rankDept: "-" },
+                { name: "교양과 인성", prof: "Unknown", type: "교양필수", typeCode: "general", credit: 2, grade: "P", rankClass: "-", rankDept: "-" },
+                { name: "상명Career Design", prof: "Unknwon", type: "교양선택", typeCode: "general", credit: 2, grade: "P", rankClass: "-", rankDept: "-" },
+                
+            ]
+        }
+    };
+
+    // ----------------------------------------------------
+    // 2. 화면 렌더링 함수들
+    // ----------------------------------------------------
+
+    // (1) 홈 화면: '내 성적표' 카드 업데이트
+    function renderHomeGradeCard() {
+        const select = document.getElementById('semesterSelect'); // 홈 화면의 셀렉터
+        const semester = select ? select.value : "2025-1"; 
+        const data = dbGrades[semester] || dbGrades["2025-1"]; // 데이터 없으면 최신학기
+
+        // 휴학 체크
+        if (data.status === 'leave') {
+            document.getElementById('gpaScore').innerText = "-";
+            document.getElementById('rankText').innerText = "휴학 학기";
+            document.getElementById('gradeList').innerHTML = `<div style="text-align:center; padding:20px; color:#94a3b8;">성적 데이터가 없습니다.</div>`;
+            const chart = document.getElementById('gpaChart');
+            if(chart) chart.style.background = `conic-gradient(#e2e8f0 0% 100%)`;
+            return;
+        }
+
+        // 재학 데이터 표시
+        document.getElementById('gpaScore').innerText = data.gpa;
+        document.getElementById('rankText').innerText = "학과 석차 " + data.rank;
+
+        // 원형 차트
+        const pct = (parseFloat(data.gpa) / 4.5) * 100;
+        const chart = document.getElementById('gpaChart');
+        if(chart) chart.style.background = `conic-gradient(#243777 0% ${pct}%, #e2e8f0 ${pct}% 100%)`;
+
+        // 리스트 렌더링
+        const homeList = document.getElementById('gradeList');
+        if(homeList) {
+            homeList.innerHTML = "";
+            data.list.forEach(sub => {
+                let iconName = sub.typeCode === 'major' ? 'code' : 'auto_stories';
+                let gradeChar = sub.grade.charAt(0); 
+                if(sub.grade === 'P') gradeChar = 'P';
+
+                const li = document.createElement('li');
+                li.className = "g-item";
+                li.innerHTML = `
+                    <div style="display:flex; align-items:center;">
+                        <div class="subject-icon ${sub.typeCode}">
+                            <span class="material-symbols-outlined">${iconName}</span>
+                        </div>
+                        <div class="g-info">
+                            <span class="g-type ${sub.typeCode}">${sub.type}</span>
+                            <span class="g-name">${sub.name}</span>
+                        </div>
+                    </div>
+                    <div class="g-badge ${gradeChar}">${sub.grade}</div>
+                `;
+                homeList.appendChild(li);
+            });
+        }
+    }
+
+    // (2) 성적 조회 화면: 상세 테이블 업데이트
+    function renderGradeDetailTable() {
+        const select = document.getElementById('gradePageSelect'); // 성적 조회 페이지의 셀렉터
+        const semester = select ? select.value : "2025-1";
+        const data = dbGrades[semester];
+
+        const tableContainer = document.getElementById('gradeTableContainer');
+        const msgBox = document.getElementById('leaveMsgBox');
+        const tableBody = document.getElementById('gradeTableBody');
+
+        // 휴학 체크
+        if (!data || data.status === 'leave') {
+            if(tableContainer) tableContainer.style.display = 'none';
+            if(msgBox) msgBox.style.display = 'block';
+            return;
+        }
+
+        // 재학이면 테이블 표시
+        if(tableContainer) tableContainer.style.display = 'block';
+        if(msgBox) msgBox.style.display = 'none';
+        
+        if(tableBody) {
+            tableBody.innerHTML = ""; 
+            data.list.forEach(sub => {
+                const tr = document.createElement('tr');
+                tr.className = "grade-row";
+                
+                // 등급 색상
+                let gradeColor = '#475569';
+                if (sub.grade.startsWith('A')) gradeColor = '#243777';
+                else if (sub.grade === 'P') gradeColor = '#10b981';
+
+                tr.innerHTML = `
+                    <td>
+                        <div style="font-weight:700; color:#334155;">${sub.name}</div>
+                        <div style="font-size:0.75rem; color:#94a3b8;">${sub.prof} 교수</div>
+                    </td>
+                    <td style="text-align:center;"><span class="g-type ${sub.typeCode}">${sub.type.substring(0,2)}</span></td>
+                    <td style="text-align:center;">${sub.credit}</td>
+                    <td style="text-align:center;"><span style="font-weight:700; color:${gradeColor};">${sub.grade}</span></td>
+                    <td style="text-align:center;">${sub.rankClass}</td>
+                    <td style="text-align:center; font-weight:700;">${sub.rankDept}</td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+    }
+
+    // 3. 뷰 전환 및 버튼 기능 (여기가 없으면 버튼이 안 눌립니다!)
+    function showView(targetId) {
+        viewSections.forEach(sec => sec.classList.remove('active'));
+        const targetSection = document.getElementById('view-' + targetId);
+        if(targetSection) targetSection.classList.add('active');
+
+        navItems.forEach(item => {
+            if(item.dataset.target === targetId) item.classList.add('active');
+            else item.classList.remove('active');
+        });
+
+        if(targetId === 'calendar') setTimeout(renderCalendar, 100);
+        if(window.innerWidth <= 900) {
+            sidebar.classList.remove('open');
+            mobileOverlay.classList.remove('open');
+        }
+    }
+
+    // 메뉴 클릭 이벤트 연결
+    navItems.forEach(item => {
+        item.addEventListener('click', () => {
+            const target = item.dataset.target;
+            if(target === 'integratedinfo') { window.open('통합정보.html', '_blank'); return; }
+            if(target === 'ecampus') { window.open('https://ecampus.smu.ac.kr', '_blank'); return; }
+            if(target) showView(target);
+        });
+    });
+
+    // 사이드바 토글
+    let isCollapsed = false;
+    function toggleSidebar() {
+        isCollapsed = !isCollapsed;
+        layout.classList.toggle('collapsed', isCollapsed);
+        toggleBtn.innerHTML = isCollapsed ? 
+            '<span class="material-symbols-outlined" style="font-size:16px;">last_page</span>' : 
+            '<span class="material-symbols-outlined" style="font-size:16px;">first_page</span>';
+    }
+    if(toggleBtn) toggleBtn.addEventListener('click', toggleSidebar);
+    if(logoBtn) logoBtn.addEventListener('click', () => {
+        if(window.innerWidth > 900) toggleSidebar();
+        else { sidebar.classList.remove('open'); mobileOverlay.classList.remove('open'); }
+    });
+
+    if(mobileMenuBtn) mobileMenuBtn.addEventListener('click', () => { sidebar.classList.add('open'); mobileOverlay.classList.add('open'); });
+    if(mobileOverlay) mobileOverlay.addEventListener('click', () => { sidebar.classList.remove('open'); mobileOverlay.classList.remove('open'); });
+
+    function toggleDropdown() { 
+        const dd = document.getElementById('userDropdown');
+        if(dd) dd.classList.toggle('show'); 
+    }
+    window.addEventListener('click', function(e) {
+        if (!document.querySelector('.profile-container').contains(e.target)) {
+            const dd = document.getElementById('userDropdown');
+            if(dd) dd.classList.remove('show');
+        }
+    });
+
+    // 타이머 설정 (30분 = 1800초)
+    let timeLeft = 1800;
+
+    // 1초마다 실행되는 카운트다운 함수
+    setInterval(() => {
+        const m = Math.floor(timeLeft / 60); // 분 계산
+        const s = timeLeft % 60;             // 초 계산
+        
+        const timerEl = document.getElementById('timerText');
+        if(timerEl) {
+            // 00:00 형식으로 텍스트 업데이트
+            timerEl.innerText = `${String(m).padStart(2,'0')}:${String(s).padStart(2,'0')}`;
+        }
+        
+        // 시간이 남았으면 1초 감소
+        if (timeLeft > 0) timeLeft--;
+        else {
+            // (선택사항) 시간이 다 되면 로그아웃 처리 등 추가 가능
+            // alert("세션이 만료되었습니다.");
+            // logout(); 
+        }
+    }, 1000);
+
+    // [수정] 시간 연장 함수 (alert 대신 showToast 사용)
+    function resetTimer() { 
+        timeLeft = 1800; 
+        showToast("세션 시간이 30분 연장되었습니다."); 
+    }
+
+    // [추가] 토스트 메시지 출력 함수
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        if(!container) return;
+
+        const toast = document.createElement('div');
+        toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+        
+        let iconName = type === 'success' ? 'check_circle' : 'error';
+        
+        toast.innerHTML = `
+            <span class="material-symbols-outlined" style="font-size:1.2rem; color:${type === 'success' ? '#10b981' : '#ef4444'}">${iconName}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        // 애니메이션
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 3000); // 3초 후 사라짐
+    }
+
+    function logout() {
+        if(confirm("로그아웃 하시겠습니까?")) {
+            // 세션 삭제
+            sessionStorage.removeItem('isLoggedIn');
+            // 로그아웃 후 로그인 화면으로 이동 (기록 교체)
+            window.location.replace('샘물포털로그인.html');
+        }
+    }
+
+    // ------------------------------------
+    // [수정] 강의계획서 팝업 기능
+    // ------------------------------------
+    
+    // 과목별 더미 데이터 (간단 예시)
+    // ------------------------------------
+    // [수정] 강의계획서 팝업 기능 (상세 정보 포함)
+    // ------------------------------------
+    
+    const syllabusData = {
+        "이산수학": { 
+            prof: "Unknown", room: "I109", type: "전공선택", credit: 3, code: "SWE2011",
+            email: "math_kim@smu.ac.kr",
+            desc: "컴퓨터 과학의 기초가 되는 논리, 집합, 함수, 관계, 그래프 이론 등을 학습합니다.\n추상적인 수학적 개념을 컴퓨터 알고리즘에 적용하는 능력을 기릅니다.",
+            eval: { mid: 30, final: 35, task: 15, att: 20 },
+            book: "Discrete Mathematics and Its Applications (Rosen)"
+        },
+        "알고리즘(PBL)": { 
+            prof: "Unknown", room: "I718I", type: "전공필수", credit: 3, code: "SWE3002",
+            email: "hong_gd@smu.ac.kr",
+            desc: "다양한 문제 해결을 위한 알고리즘 설계 기법(분할정복, 탐욕법, DP 등)을 학습합니다.\nPBL 기반으로 실생활 문제를 해결하며 실무 능력을 배양합니다.",
+            eval: { mid: 30, final: 30, task: 30, att: 10 },
+            book: "Introduction to Algorithms (CLRS)"
+        },
+        "알고리즘<br>실습(PBL)": { 
+            prof: "Unknown", room: "I718I", type: "전공선택", credit: 3, code: "SWE3003",
+            email: "park_practice@smu.ac.kr",
+            desc: "알고리즘 이론 수업에서 배운 내용을 바탕으로, 실제 코드를 작성하고 최적화하는 실습을 진행합니다.\n백준/프로그래머스 등 다양한 문제 풀이를 진행합니다.",
+            eval: { mid: 0, final: 40, task: 50, att: 10 },
+            book: "파이썬 알고리즘 인터뷰"
+        },
+        "데이터베이스": { 
+            prof: "Unknown", room: "I110", type: "전공선택", credit: 3, code: "SWE3015",
+            email: "data_lee@smu.ac.kr",
+            desc: "관계형 데이터베이스의 원리와 SQL을 심도 있게 학습합니다.\n데이터 모델링, 정규화, 트랜잭션 관리 등을 다룹니다.",
+            eval: { mid: 35, final: 35, task: 20, att: 10 },
+            book: "Database System Concepts"
+        },
+        "HCI(PBL)": { 
+            prof: "Unknown", room: "N203", type: "전공선택", credit: 3, code: "SWE3022",
+            email: "culture_lee@smu.ac.kr",
+            desc: "인간과 컴퓨터 간의 상호작용 원리를 이해하고 사용자 경험(UX) 중심의 설계를 학습합니다.\n팀 프로젝트를 통해 실제 프로토타입을 제작합니다.",
+            eval: { mid: 20, final: 20, task: 50, att: 10 },
+            book: "The Design of Everyday Things (Norman)"
+        },
+        "예술세계의<br>탐구": { 
+            prof: "Unknown", room: "I311", type: "교양필수", credit: 2, code: "GEN1042",
+            email: "art_choi@smu.ac.kr",
+            desc: "다양한 예술 작품을 통해 예술의 역사와 가치를 이해하고 비평적 시각을 기릅니다.\n미술, 음악, 공연 등 다양한 장르를 다룹니다.",
+            eval: { mid: 30, final: 30, task: 20, att: 20 },
+            book: "서양미술사 (곰브리치)"
+        }
+    };
+
+    // [수정] 팝업 데이터 바인딩 함수
+    function showSyllabus(subjectName) {
+        // 1. <br> 태그가 있는 이름과 없는 이름 모두 매칭 시도
+        let info = syllabusData[subjectName];
+        if (!info) {
+            // <br> 제거 후 재시도 (키값 매칭 유연성 확보)
+            const cleanName = subjectName.replace('<br>', '');
+            // 데이터 키를 순회하며 매칭 (예: 데이터엔 "알고리즘(PBL)"인데 인자는 "알고리즘<br>실습" 인 경우 등 방지)
+            // 여기서는 단순화를 위해 키값 직접 매칭 시도
+            // 실제로는 데이터 키도 cleanName으로 관리하는 것이 좋음
+        }
+
+        if(info) {
+            // 텍스트 정보 주입
+            document.getElementById('sylTitle').innerHTML = subjectName; // 줄바꿈 유지
+            document.getElementById('sylCode').innerText = info.code;
+            document.getElementById('sylProf').innerText = info.prof;
+            document.getElementById('sylEmail').innerText = info.email;
+            document.getElementById('sylRoom').innerText = info.room;
+            document.getElementById('sylCredit').innerText = info.credit + "학점";
+            document.getElementById('sylType').innerText = info.type;
+            document.getElementById('sylDesc').innerText = info.desc;
+            document.getElementById('sylBook').innerText = info.book;
+
+            // 평가 비율 주입
+            document.getElementById('evalMid').innerText = info.eval.mid + "%";
+            document.getElementById('evalFinal').innerText = info.eval.final + "%";
+            document.getElementById('evalTask').innerText = info.eval.task + "%";
+            document.getElementById('evalAtt').innerText = info.eval.att + "%";
+            
+            // 팝업 보이기
+            document.getElementById('syllabusModal').style.display = 'flex';
+        } else {
+            alert("해당 과목의 강의계획서 정보가 없습니다.");
+        }
+    }
+
+    function closeSyllabus() {
+        document.getElementById('syllabusModal').style.display = 'none';
+    }
+
+    // 배경 클릭 시 닫기 이벤트
+    document.getElementById('syllabusModal').addEventListener('click', function(e) {
+        if(e.target === this) closeSyllabus();
+    });
+
+    // 기존 goToGrade 대신 사용하는 함수
+    function showSyllabus(subjectName) {
+        // HTML 태그(<br>) 제거하여 키값 매칭
+        const cleanName = subjectName.replace('<br>', '');
+        const info = syllabusData[subjectName] || syllabusData[cleanName];
+
+        if(info) {
+            document.getElementById('sylTitle').innerHTML = cleanName;
+            document.getElementById('sylProf').innerText = info.prof + " 교수";
+            document.getElementById('sylRoom').innerText = info.room;
+            document.getElementById('sylType').innerText = info.type;
+            document.getElementById('sylDesc').innerText = info.desc;
+            
+            // 팝업 열기
+            const modal = document.getElementById('syllabusModal');
+            modal.style.display = 'flex';
+        } else {
+            alert("강의계획서 정보가 없습니다.");
+        }
+    }
+
+    function closeSyllabus() {
+        document.getElementById('syllabusModal').style.display = 'none';
+    }
+
+    // 배경 클릭 시 닫기
+    document.getElementById('syllabusModal').addEventListener('click', function(e) {
+        if(e.target === this) closeSyllabus();
+    });
+
+    // 4. 초기화 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        renderHomeGradeCard();
+        renderGradeDetailTable();
+        renderCalendar();
+        renderAttendance();
+        renderCourseCards();
+        
+        filterNotices('all', document.querySelector('.notice-tabs .tab-btn.active'));
+
+        // 드롭다운 이벤트 연결
+        const homeSelect = document.getElementById('semesterSelect');
+        if(homeSelect) homeSelect.addEventListener('change', renderHomeGradeCard);
+
+        const gradeSelect = document.getElementById('gradePageSelect');
+        if(gradeSelect) gradeSelect.addEventListener('change', renderGradeDetailTable);
+
+        const courseSelect = document.getElementById('courseSemesterSelect');
+        if(courseSelect) courseSelect.addEventListener('change', renderCourseCards);
+    });
+
+    // ------------------------------------
+    // [학사 일정 데이터 업데이트 (더미 데이터 추가)]
+    // ------------------------------------
+    const academicEvents = [
+        // 9월
+        { title: "2학기 개강", start: "2025-09-01", end: "2025-09-01", type: "urgent" },
+        { title: "수강신청 정정 기간", start: "2025-09-01", end: "2025-09-07", type: "normal" },
+        { title: "개강총회", start: "2025-09-24", end: "2025-09-24", type: "normal" },
+
+        // 10월 (메인)
+        { title: "개천절", start: "2025-10-03", end: "2025-10-03", type: "normal" },
+        { title: "추석 연휴", start: "2025-10-05", end: "2025-10-08", type: "normal" }, /* 가상 날짜 */
+        { title: "한글날", start: "2025-10-09", end: "2025-10-09", type: "normal" },
+        { title: "중간고사", start: "2025-10-20", end: "2025-10-24", type: "urgent" },
+        { title: "캡스톤디자인 중간발표", start: "2025-10-29", end: "2025-10-29", type: "normal" },
+        { title: "수업 만족도 조사", start: "2025-10-27", end: "2025-11-07", type: "normal" },
+
+        // 11월
+        { title: "수강신청 철회", start: "2025-11-05", end: "2025-11-07", type: "normal" },
+        { title: "대학 축제 (가을)", start: "2025-11-12", end: "2025-11-14", type: "normal" },
+        { title: "졸업논문 제출 마감", start: "2025-11-24", end: "2025-11-28", type: "urgent" },
+
+        // 12월
+        { title: "보강 주간", start: "2025-12-01", end: "2025-12-05", type: "normal" },
+        { title: "기말고사", start: "2025-12-08", end: "2025-12-12", type: "urgent" },
+        { title: "동계 방학 시작", start: "2025-12-22", end: "2025-12-22", type: "normal" },
+        { title: "성탄절", start: "2025-12-25", end: "2025-12-25", type: "normal" },
+        { title: "성적 열람 및 이의신청", start: "2025-12-29", end: "2025-12-31", type: "urgent" }
+    ];
+
+    // [수정] 달력 초기 날짜를 2025년 10월로 고정 (데이터 확인용)
+    let calDate = new Date('2025-10-01'); 
+
+    function renderCalendar() {
+        const title = document.getElementById('calTitle');
+        if(!title) return;
+        const year = calDate.getFullYear();
+        const month = calDate.getMonth();
+        title.innerText = `${year}. ${String(month+1).padStart(2,'0')}`;
+        
+        const firstDay = new Date(year, month, 1).getDay();
+        const lastDate = new Date(year, month + 1, 0).getDate();
+        const grid = document.getElementById('calendarBody');
+        if(!grid) return;
+        grid.innerHTML = "";
+
+        // 빈 칸 채우기
+        for(let i=0; i<firstDay; i++) {
+            const empty = document.createElement('div');
+            empty.className = "cal-day";
+            empty.style.backgroundColor = "#f8fafc";
+            grid.appendChild(empty);
+        }
+
+        // 날짜 채우기
+        for(let d=1; d<=lastDate; d++) {
+            const dateStr = `${year}-${String(month+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+            const curDate = new Date(dateStr);
+            
+            // 오늘 날짜 확인 (실제 오늘과 비교)
+            const today = new Date();
+            const isToday = (today.toDateString() === curDate.toDateString()) ? 'today' : '';
+            
+            const dayDiv = document.createElement('div');
+            dayDiv.className = `cal-day ${isToday}`;
+            dayDiv.innerHTML = `<span>${d}</span>`;
+
+            // 일정 필터링 및 바(Bar) 생성
+            const events = academicEvents.filter(e => curDate >= new Date(e.start) && curDate <= new Date(e.end));
+            
+            // 최대 3개까지만 바 표시 (공간 부족 방지)
+            events.slice(0, 3).forEach(e => {
+                const bar = document.createElement('div');
+                bar.className = `event-bar ${e.type}`;
+                bar.innerText = e.title;
+                dayDiv.appendChild(bar);
+            });
+            
+            // 3개 넘어가면 '+' 표시 (선택사항)
+            if (events.length > 3) {
+                const more = document.createElement('div');
+                more.style.fontSize = '0.7rem';
+                more.style.color = '#94a3b8';
+                more.style.paddingLeft = '4px';
+                more.innerText = `+${events.length - 3} 더보기`;
+                dayDiv.appendChild(more);
+            }
+
+            dayDiv.onclick = function() {
+                document.querySelectorAll('.cal-day').forEach(el => el.classList.remove('selected'));
+                this.classList.add('selected');
+                showScheduleList(events, `${month+1}월 ${d}일 일정`);
+            };
+            grid.appendChild(dayDiv);
+        }
+        
+        // 월별 리스트 업데이트
+        const monthlyEvents = academicEvents.filter(e => {
+            const s = new Date(e.start);
+            const eDate = new Date(e.end);
+            // 해당 월에 걸쳐있는 일정 포함
+            return (s.getMonth() === month && s.getFullYear() === year) || 
+                   (eDate.getMonth() === month && eDate.getFullYear() === year);
+        });
+        monthlyEvents.sort((a,b) => new Date(a.start) - new Date(b.start));
+        showScheduleList(monthlyEvents, `${month+1}월 전체 일정`);
+    }
+
+    function showScheduleList(events, title) {
+        const t = document.getElementById('selectedDateTitle');
+        const l = document.getElementById('selectedEventList');
+        if(t) t.innerText = title;
+        if(l) {
+            if(events.length===0) l.innerHTML=`<div style="text-align:center; color:#999; margin-top:50px;">일정이 없습니다.</div>`;
+            else l.innerHTML=events.map(e=>`<div class="event-card ${e.type}"><div style="display:flex; justify-content:space-between;"><span class="event-title">${e.title}</span></div></div>`).join('');
+        }
+    }
+    function moveMonth(step) { calDate.setMonth(calDate.getMonth() + step); renderCalendar(); }
+
+  // ------------------------------------
+    // [출결 현황 데이터 및 기능 완전 복구]
+    // ------------------------------------
+    
+   
+    // 1. 학기별 출결 데이터 (2022 ~ 2025)
+    const attendanceDB = {
+        "2025-1": {
+            status: "attending",
+            list: [
+                { name: "이산수학", prof: "김수학", rate: 100, color: "#8b5cf6", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "알고리즘(PBL)", prof: "홍길동", rate: 93, color: "#3b82f6", weeks: ['P','P','L','P','P','P','P','P','A','P','P','V','P','P','P'] },
+                { name: "알고리즘 실습", prof: "박실습", rate: 100, color: "#06b6d4", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "예술세계의 탐구", prof: "최예술", rate: 87, color: "#ec4899", weeks: ['P','A','P','P','V','P','P','C','P','L','P','P','P','P','P'] },
+                { name: "데이터베이스", prof: "이데이터", rate: 95, color: "#4f46e5", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','L'] },
+                { name: "HCI(PBL)", prof: "이문화", rate: 100, color: "#f97316", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] }
+            ]
+        },
+        // 휴학 기간
+        "2024-2": { status: "leave" },
+        "2024-1": { status: "leave" },
+        "2023-2": { status: "leave" },
+        "2023-1": { status: "leave" },
+
+        // 1학년 데이터 (가상의 과거 데이터)
+        "2022-2": {
+            status: "attending",
+            list: [
+                { name: "고급 C프로그래밍", prof: "박코딩", rate: 93, color: "#3b82f6", weeks: ['P','P','P','P','P','L','P','P','P','P','P','P','P','P','P'] },
+                { name: "이산수학", prof: "김수학", rate: 100, color: "#8b5cf6", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "컴퓨터개론", prof: "최개론", rate: 100, color: "#10b981", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "대학영어 2", prof: "James", rate: 80, color: "#f59e0b", weeks: ['P','A','P','A','P','P','P','P','P','P','P','A','P','P','P'] }
+            ]
+        },
+        "2022-1": {
+            status: "attending",
+            list: [
+                { name: "C프로그래밍 기초", prof: "박코딩", rate: 86, color: "#3b82f6", weeks: ['P','P','L','L','P','P','P','P','P','P','P','A','P','P','P'] },
+                { name: "미분적분학", prof: "정수학", rate: 100, color: "#6366f1", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "컴퓨팅사고", prof: "이컴퓨", rate: 100, color: "#ec4899", weeks: ['P','P','P','P','P','P','P','P','P','P','P','P','P','P','P'] },
+                { name: "대학영어 1", prof: "Sarah", rate: 93, color: "#f59e0b", weeks: ['P','P','P','P','L','P','P','P','P','P','P','P','P','P','P'] }
+            ]
+        }
+    };
+
+    // 2. 화면 렌더링 함수 (UI 생성)
+    function renderAttendance() {
+        const select = document.getElementById('attSemesterSelect');
+        const semester = select ? select.value : "2025-1";
+        const data = attendanceDB[semester];
+
+        const listArea = document.getElementById('attListArea');
+        const contentBox = document.getElementById('attContentBox');
+        const msgBox = document.getElementById('attLeaveMsgBox');
+
+        // [휴학 체크]
+        if (!data || data.status === 'leave') {
+            if(contentBox) contentBox.style.display = 'none'; // 그래프 및 리스트 숨김
+            if(msgBox) msgBox.style.display = 'block';        // 휴학 메시지 표시
+            return;
+        }
+
+        // [재학] -> UI 표시
+        if(contentBox) contentBox.style.display = 'block';
+        if(msgBox) msgBox.style.display = 'none';
+        if(!listArea) return;
+        
+        listArea.innerHTML = ""; // 기존 내용 초기화
+        let totalP = 0, totalL = 0, totalA = 0;
+        let subjectCount = 0;
+        let totalRateSum = 0;
+
+        data.list.forEach((sub, idx) => {
+            subjectCount++;
+            totalRateSum += sub.rate;
+
+            // 주차별 상세 HTML 생성
+            let weeksHtml = sub.weeks.map((status, i) => {
+                let badgeClass = "";
+                let badgeText = "";
+                
+                if(status === 'P') { badgeClass="st-present"; badgeText="O"; totalP++; }
+                else if(status === 'L') { badgeClass="st-late"; badgeText="△"; totalL++; }
+                else if(status === 'A') { badgeClass="st-absent"; badgeText="X"; totalA++; }
+                else if(status === 'V') { badgeClass="st-video"; badgeText="▶"; totalP++; }
+                else if(status === 'C') { badgeClass="st-cancel"; badgeText="-"; }
+
+                return `<div class="week-item"><span class="week-num">${i+1}주</span><div class="status-badge ${badgeClass}">${badgeText}</div></div>`;
+            }).join('');
+
+            // 카드 HTML 생성
+            const div = document.createElement('div');
+            div.className = "att-subject-card";
+            div.innerHTML = `
+                <div class="att-card-header" onclick="toggleAttDetail(${idx})">
+                    <div class="att-sub-info">
+                        <div class="att-sub-name">${sub.name}</div>
+                        <div class="att-sub-prof">${sub.prof} 교수</div>
+                    </div>
+                    <div class="att-progress-wrapper">
+                        <div class="att-percent" style="color:${sub.color}">${sub.rate}%</div>
+                        <div class="att-progress-bg">
+                            <div class="att-progress-fill" style="width:${sub.rate}%; background-color:${sub.color}"></div>
+                        </div>
+                    </div>
+                </div>
+                <div class="att-detail-view" id="attDetail_${idx}">
+                    <div style="font-size:0.8rem; color:#64748b; margin-bottom:10px;">
+                        <span style="margin-right:10px;">✅ 출석</span>
+                        <span style="margin-right:10px; color:#ca8a04;">⚠️ 지각</span>
+                        <span style="margin-right:10px; color:#ef4444;">❌ 결석</span>
+                        <span style="margin-right:10px; color:#7e22ce;">📹 영상</span>
+                        <span style="color:#94a3b8;">🚫 휴강</span>
+                    </div>
+                    <div class="week-grid">
+                        ${weeksHtml}
+                    </div>
+                </div>`;
+            listArea.appendChild(div);
+        });
+
+        // 상단 통계 숫자 업데이트
+        const cp = document.getElementById('countPresent'); if(cp) cp.innerText = totalP;
+        const cl = document.getElementById('countLate'); if(cl) cl.innerText = totalL;
+        const ca = document.getElementById('countAbsent'); if(ca) ca.innerText = totalA;
+        
+        // 상단 원형 차트 업데이트
+        const avg = subjectCount > 0 ? Math.round(totalRateSum / subjectCount) : 0;
+        const attTotal = document.getElementById('attTotalPercent');
+        if(attTotal) attTotal.innerText = avg+"%";
+        const chart = document.getElementById('attTotalChart');
+        if(chart) chart.style.background = `conic-gradient(#10b981 0% ${avg}%, #f1f5f9 ${avg}% 100%)`;
+    }
+
+    // 3. 상세내용 접기/펼치기 기능
+    function toggleAttDetail(index) {
+        const detail = document.getElementById(`attDetail_${index}`);
+        if(detail) detail.classList.toggle('open');
+    }
+
+    // 4. 초기화 실행
+    document.addEventListener('DOMContentLoaded', () => {
+        renderHomeGradeCard();
+        renderGradeDetailTable();
+        renderCalendar();
+        renderAttendance();
+        
+        const homeSelect = document.getElementById('semesterSelect');
+        if(homeSelect) homeSelect.addEventListener('change', renderHomeGradeCard);
+
+        const gradeSelect = document.getElementById('gradePageSelect');
+        if(gradeSelect) gradeSelect.addEventListener('change', renderGradeDetailTable);
+
+        // [추가됨] 출결 현황 드롭다운 이벤트 연결
+        const attSelect = document.getElementById('attSemesterSelect');
+        if(attSelect) attSelect.addEventListener('change', renderAttendance);
+    });
+
+   // ▼▼▼ [수정] 이 코드로 교체하세요 ▼▼▼
+
+    // ------------------------------------
+    // [공지사항 데이터 및 로직 수정]
+    // ------------------------------------
+    
+    // 1. 공지사항 데이터 (content 필드 추가됨)
+    const noticeDB = [
+        { 
+            id: 108, type: 'urgent', typeName: '중요', title: '[필독] 2025학년도 1학기 수강신청 정정 기간 안내', date: '2025.03.02', views: 4120,
+            content: "2025학년도 1학기 수강신청 정정 기간을 아래와 같이 안내합니다.\n\n1. 정정 기간: 2025.03.02(월) 10:00 ~ 2025.03.08(금) 17:00\n2. 대상: 전체 재학생\n3. 유의사항\n - 여석이 있는 과목에 한해 신청 가능합니다.\n - 폐강 강좌는 자동으로 수강 취소 처리됩니다.\n\n반드시 기간 내에 확인하시기 바랍니다."
+        },
+        { 
+            id: 107, type: 'career', typeName: '취업', title: '2025 상반기 삼성전자 신입사원 채용 설명회 (상명대 전용)', date: '2025.03.01', views: 1540,
+            content: "삼성전자 DS부문 상반기 채용 설명회를 우리 대학에서 진행합니다.\n\n일시: 2025년 3월 15일(수) 14:00\n장소: 밀레니엄관 401호\n참가 혜택: 소정의 기념품 및 서류 가점(참석자 한정)\n\n관심 있는 학생들의 많은 참여 바랍니다."
+        },
+        { 
+            id: 106, type: 'scholar', typeName: '장학', title: '2025-1학기 국가장학금 2차 신청 일정 안내', date: '2025.02.28', views: 2856,
+            content: "한국장학재단 국가장학금 2차 신청 기간입니다.\n\n신청 기간: ~ 3월 15일(수) 18:00까지\n대상: 신입생, 편입생, 재입학생, 복학생 및 1차 미신청 재학생\n\n재학생은 원칙적으로 1차 신청만 가능하나, 재학 중 2회에 한해 구제 신청이 가능합니다."
+        },
+        { 
+            id: 105, type: 'program', typeName: '비교과', title: '[SW중심대] AI 코딩 테스트 대비 특강 신청 모집', date: '2025.02.27', views: 942,
+            content: "SW중심대학사업단에서 알고리즘 역량 강화를 위한 특강을 진행합니다.\n\n주제: 대기업 기출 문제 풀이 및 최적화 전략\n강사: 박코딩 (전 카카오 개발자)\n일정: 매주 금요일 18:00 ~ 20:00 (4주 완성)"
+        },
+        { 
+            id: 104, type: 'academic', typeName: '학사', title: '2025학년도 1학기 휴학 및 복학 신청 안내', date: '2025.02.20', views: 3100,
+            content: "휴/복학 신청 기간 및 절차 안내입니다.\n통합정보시스템을 통해 신청 후, 승인 여부를 반드시 확인하시기 바랍니다."
+        },
+        { 
+            id: 103, type: 'career', typeName: '취업', title: '[인턴] 네이버 클라우드 하계 체험형 인턴십 모집', date: '2025.02.18', views: 2100,
+            content: "네이버 클라우드에서 여름방학 체험형 인턴을 모집합니다.\n자세한 직무 및 요건은 첨부파일을 참조하세요."
+        },
+        { 
+            id: 102, type: 'program', typeName: '비교과', title: '제5회 상명 캡스톤 디자인 경진대회 참가자 모집', date: '2025.02.15', views: 880,
+            content: "창의적인 아이디어를 가진 캡스톤 디자인 팀을 모집합니다.\n대상: 500만원 상당의 장학금 및 총장상 수여"
+        },
+        { 
+            id: 101, type: 'scholar', typeName: '장학', title: '교내 성적우수 장학금 선발 기준 변경 안내', date: '2025.02.10', views: 4500,
+            content: "2025학년도부터 성적 장학금 선발 기준 중 영어 성적 반영 비율이 조정됩니다.\n기존 20% -> 변경 10%"
+        },
+    ];
+
+    // 2. 공지사항 필터링 및 렌더링 함수
+    function filterNotices(filterType, btnElement) {
+        const listArea = document.getElementById('noticeListArea');
+        if(!listArea) return;
+        
+        // 상세 화면 보고 있다가 탭 누르면 다시 목록으로 복귀
+        closeNoticeDetail();
+
+        listArea.innerHTML = ""; // 기존 리스트 비우기
+
+        // 탭 버튼 활성화 스타일 변경
+        if(btnElement) {
+            const buttons = document.querySelectorAll('.notice-tabs .tab-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            btnElement.classList.add('active');
+        }
+
+        // 데이터 필터링
+        const filteredData = (filterType === 'all') 
+            ? noticeDB 
+            : noticeDB.filter(n => n.type === filterType);
+
+        if(filteredData.length === 0) {
+            listArea.innerHTML = `<div style="text-align:center; padding:40px; color:#94a3b8;">해당하는 공지사항이 없습니다.</div>`;
+            return;
+        }
+
+        // 리스트 그리기 (onclick 추가됨)
+        filteredData.forEach(notice => {
+            const pinnedClass = notice.type === 'urgent' ? 'pinned' : '';
+            const badgeClass = notice.type; 
+            
+            const numContent = notice.type === 'urgent' 
+                ? '<i class="fa-solid fa-bullhorn" style="color:#ef4444"></i>' 
+                : notice.id;
+
+            const html = `
+                <div class="n-row ${pinnedClass}" onclick="openNoticeDetail(${notice.id})">
+                    <div class="n-num">${numContent}</div>
+                    <div><span class="n-badge ${badgeClass}">${notice.typeName}</span></div>
+                    <div class="n-title">${notice.title}</div>
+                    <div class="n-date">
+                        <span class="pc-date">${notice.date}</span>
+                    </div>
+                    <div class="n-views">${notice.views}</div>
+                </div>
+            `;
+            listArea.insertAdjacentHTML('beforeend', html);
+        });
+    }
+
+    // 3. [신규] 상세 화면 열기 함수
+    function openNoticeDetail(id) {
+        const notice = noticeDB.find(n => n.id === id);
+        if(!notice) return;
+
+        // 데이터 채워넣기
+        const badge = document.getElementById('ndBadge');
+        if(badge) {
+            badge.className = `n-badge ${notice.type}`;
+            badge.innerText = notice.typeName;
+        }
+
+        document.getElementById('ndTitle').innerText = notice.title;
+        document.getElementById('ndDate').innerText = notice.date;
+        document.getElementById('ndViews').innerText = notice.views;
+        document.getElementById('ndContent').innerText = notice.content;
+
+        // 화면 전환 (목록 숨김 -> 상세 보임)
+        document.getElementById('noticeListSection').style.display = 'none';
+        document.getElementById('noticeDetailSection').style.display = 'flex';
+    }
+
+    // 4. [신규] 상세 화면 닫기 (목록으로 돌아가기) 함수
+    function closeNoticeDetail() {
+        document.getElementById('noticeDetailSection').style.display = 'none';
+        document.getElementById('noticeListSection').style.display = 'block';
+    }
+    // ▲▲▲ 여기까지 교체 ▲▲▲
+
+    // ------------------------------------
+    // [수강과목 데이터 및 렌더링 로직 (연도별/휴학 포함)]
+    // ------------------------------------
+    
+    const courseDB = {
+        // 3학년 1학기 (현재)
+        "2025-1": {
+            status: "attending",
+            list: [
+                { type: 'major', typeName: '전공필수', title: '컴퓨터 알고리즘', code: 'SWE3002-01', prof: '홍길동', room: 'I718I', time: '월 2,3,4', credit: 3 },
+                { type: 'major', typeName: '전공선택', title: '데이터베이스', code: 'SWE3015-02', prof: '이데이터', room: 'I110', time: '화 6,7,8', credit: 3 },
+                { type: 'major', typeName: '전공선택', title: 'HCI (PBL)', code: 'SWE3022-01', prof: '이문화', room: 'N203', time: '수 6,7,8', credit: 3 },
+                { type: 'general', typeName: '교양필수', title: '예술세계의 탐구', code: 'GEN1042-03', prof: '최예술', room: 'I311', time: '수 5,6,7', credit: 2 },
+                { type: 'major', typeName: '전공선택', title: '알고리즘 실습', code: 'SWE3003-01', prof: '박실습', room: 'I718I', time: '목 2,3,4', credit: 3 },
+                { type: 'major', typeName: '전공선택', title: '이산수학', code: 'SWE2011-01', prof: '김수학', room: 'I109', time: '월 6,7,8', credit: 3 }
+            ]
+        },
+        // 휴학 기간
+        "2024-2": { status: "leave" },
+        "2024-1": { status: "leave" },
+        "2023-2": { status: "leave" },
+        "2023-1": { status: "leave" },
+
+        // 1학년 2학기
+        "2022-2": {
+            status: "attending",
+            list: [
+                { type: 'major', typeName: '전공필수', title: '고급 C프로그래밍', code: 'SWE1002-01', prof: '박코딩', room: 'I718I', time: '화 1,2,3', credit: 3 },
+                { type: 'major', typeName: '전공선택', title: '이산수학', code: 'SWE2001-02', prof: '김수학', room: 'I304', time: '수 2,3,4', credit: 3 },
+                { type: 'major', typeName: '전공선택', title: '컴퓨터개론', code: 'SWE1010-01', prof: '최개론', room: 'N105', time: '목 5,6,7', credit: 3 },
+                { type: 'general', typeName: '교양필수', title: '대학영어 2', code: 'ENG1002-15', prof: 'James', room: 'J202', time: '금 1,2', credit: 2 },
+                { type: 'general', typeName: '교양선택', title: '글쓰기 기초', code: 'GEN2022-01', prof: '이작가', room: 'S401', time: '월 6,7', credit: 2 }
+            ]
+        },
+        // 1학년 1학기
+        "2022-1": {
+            status: "attending",
+            list: [
+                { type: 'major', typeName: '전공필수', title: 'C프로그래밍 기초', code: 'SWE1001-03', prof: '박코딩', room: 'I718I', time: '월 1,2,3', credit: 3 },
+                { type: 'general', typeName: '기초교양', title: '미분적분학', code: 'MSC1001-01', prof: '정수학', room: 'N201', time: '화 4,5,6', credit: 3 },
+                { type: 'general', typeName: '교양필수', title: '컴퓨팅사고', code: 'GEN1005-05', prof: '이컴퓨', room: 'I101', time: '수 1,2', credit: 2 },
+                { type: 'general', typeName: '교양필수', title: '대학영어 1', code: 'ENG1001-10', prof: 'Sarah', room: 'J203', time: '목 3,4', credit: 2 },
+                { type: 'general', typeName: '교양필수', title: '상명정신과 윤리', code: 'GEN1001-01', prof: '김윤리', room: 'M101', time: '금 5,6', credit: 2 }
+            ]
+        }
+    };
+
+    function renderCourseCards() {
+        const select = document.getElementById('courseSemesterSelect');
+        const semester = select ? select.value : "2025-1";
+        const data = courseDB[semester];
+
+        const area = document.getElementById('courseCardArea');
+        const msgBox = document.getElementById('courseLeaveMsgBox');
+        const btnArea = document.getElementById('courseActionBtns');
+
+        if(!area) return;
+
+        // 1. 휴학 체크
+        if (!data || data.status === 'leave') {
+            area.style.display = 'none';
+            if(msgBox) msgBox.style.display = 'block';
+            if(btnArea) btnArea.style.display = 'none'; // 시간표 출력 버튼 숨김
+            return;
+        }
+
+        // 2. 재학 시 렌더링
+        area.style.display = 'grid';
+        if(msgBox) msgBox.style.display = 'none';
+        if(btnArea) btnArea.style.display = 'flex';
+        
+        area.innerHTML = ""; // 초기화
+
+        data.list.forEach(c => {
+            const cardHtml = `
+                <div class="course-card ${c.type === 'major' ? 'major' : 'general'}">
+                    <div class="c-header">
+                        <span class="c-badge ${c.type === 'major' ? 'major' : 'general'}">${c.typeName}</span>
+                        <div class="c-title">${c.title}</div>
+                        <div class="c-code">${c.code} • ${c.credit}학점</div>
+                    </div>
+                    <div class="c-body">
+                        <div class="c-info"><i class="fa-solid fa-user"></i> ${c.prof} 교수님</div>
+                        <div class="c-info"><i class="fa-regular fa-clock"></i> ${c.time}</div>
+                        <div class="c-info"><i class="fa-solid fa-location-dot"></i> ${c.room} 강의실</div>
+                    </div>
+                    <div class="c-footer">
+                        <button class="c-btn primary">E-campus</button>
+                        <button class="c-btn">계획서</button>
+                    </div>
+                </div>
+            `;
+            area.insertAdjacentHTML('beforeend', cardHtml);
+        });
+    }
+    
+
+
+    
+   // ----------------------------------------------------
+    // [AI 챗봇 기능]
+    // ----------------------------------------------------
+    
+    // 1. API 키 설정 (주의: 실제 서비스 배포 시에는 서버에서 관리해야 안전합니다)
+    const API_KEY = 'API 키가 노출 될 수 있기 때문에 해당 부분은 공백으로 둔다'; 
+
+    const chatWindow = document.getElementById('chatWindow');
+    const chatInput = document.getElementById('chatInput');
+    const chatBody = document.getElementById('chatBody');
+
+    // 채팅창 열기/닫기 토글
+    function toggleChat() {
+        if (chatWindow.style.display === 'flex') {
+            chatWindow.style.display = 'none';
+        } else {
+            chatWindow.style.display = 'flex';
+            setTimeout(() => chatInput.focus(), 100); // 열릴 때 입력창 포커스
+        }
+    }
+
+    // 엔터키 입력 처리
+    function handleEnter(e) {
+        if (e.key === 'Enter') sendMessage();
+    }
+
+    // [핵심] 링크 변환 함수 (sendMessage 함수 위쪽에 정의)
+    function convertLinksToHtml(text) {
+        // [이름](주소) 패턴을 찾아 <a href="..."> 태그로 변환
+        const linkRegex = /\[([^\]]+)\]\((https?:\/\/[^\)]+)\)/g;
+        return text.replace(linkRegex, (match, name, url) => {
+            // 스타일: 파란색(#2563eb), 굵게, 밑줄
+            return `<a href="${url}" target="_blank" style="color: #2563eb; text-decoration: underline; font-weight: bold;">${name} 🔗</a>`;
+        });
+    }
+
+    // 메시지 전송 및 API 호출 (async 필수!)
+    async function sendMessage() {
+        const text = chatInput.value.trim();
+        if (!text) return; // 빈 입력이면 실행 안 함
+
+        // 1. 사용자 메시지 화면에 표시
+        appendMessage('user', text);
+        chatInput.value = ''; // 입력창 비우기
+
+        // 2. 로딩 표시 (수뭉이가 입력중...)
+        const loadingId = appendLoading();
+
+        try {
+            // 3. OpenAI API 호출
+            const response = await fetch('https://api.openai.com/v1/chat/completions', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${API_KEY}`
+                },
+                body: JSON.stringify({
+                    model: "gpt-4o-mini", // 또는 "gpt-3.5-turbo"
+                    messages: [
+                        {
+                            role: "system", 
+                            content: `
+                                당신은 상명대학교의 마스코트이자 AI 챗봇 '수뭉이'입니다. 
+                                학생들의 질문에 맞춰 **정확한 바로가기 링크**나 **핵심 정보**를 제공해야 합니다.
+
+                                [핵심 지침]
+                                학생에게 웹사이트나 링크를 제공할 때는 반드시 **마크다운 링크 형식**을 사용하세요.
+                                형식: [사이트이름](URL)
+
+                                [데이터베이스 예시]
+                                - 학교 홈페이지 -> [상명대학교](https://www.smu.ac.kr)
+                                - 포털 시스템 -> [샘물포털](https://portal.smu.ac.kr)
+                                
+                                [필수 정보/링크 데이터베이스]
+                                - **학교 메인/홈페이지**: [상명대학교 홈페이지](https://www.smu.ac.kr)
+                                - **수강신청/성적/샘물**: [샘물 포털 시스템](https://portal.smu.ac.kr)
+                                - **과제/강의자료/이캠퍼스**: [e-Campus (LMS)](https://ecampus.smu.ac.kr)
+                                - **도서관/책**: [상명대학교 학술정보관](https://lib.smu.ac.kr)
+                                - **채용/취업/진로**: [대학일자리센터](https://job.smu.ac.kr)
+                                - **비교과/동아리/상명위**: [비교과 통합지원센터](https://www.smu.ac.kr/extracur/index.do)
+                                - **소프트웨어학과**: [소프트웨어학과 홈페이지](https://software.smu.ac.kr/software/index.do)
+                                -** 디자인대학**:[디자인대학 홈페이지](https://design.smu.ac.kr/design/index.do)
+
+                                [행동 지침]
+                                1. **말투**: "여기 있어~!", "바로 이동할 수 있게 링크를 줄게!" 처럼 친근하고 명랑한 수뭉이 말투를 사용하세요.
+                                2. **상황 판단**: 학생이 "성적 어디서 봐?"라고 물으면 "성적 확인은 샘물 포털에서 할 수 있어!"라며 [샘물 포털 시스템] 링크를 제공하세요.
+                                3. **형식**: 링크를 줄 때는 사용자가 클릭하기 쉽도록 마크다운 링크 형식( [설명](URL) )을 사용하세요.
+                                4. **이모지**: 🦌, 🏫, 🔗, 💻 등을 적절히 섞어주세요.
+                            `
+                        },
+                        { role: "user", content: text }
+                    ],
+                    max_tokens: 600,
+                    temperature: 0.5
+                })
+            });
+
+            const data = await response.json();
+            
+            // 로딩 아이콘 제거
+            removeMessage(loadingId);
+
+            if (data.choices && data.choices.length > 0) {
+                const botReply = data.choices[0].message.content;
+                
+                // [핵심] 여기서 링크 변환 함수를 실행!
+                const replyWithLinks = convertLinksToHtml(botReply);
+                
+                // 변환된 HTML을 화면에 표시
+                appendMessage('bot', replyWithLinks);
+            } else {
+                appendMessage('bot', "오류가 발생했습니다. 다시 시도해주세요. 😥");
+            }
+
+        } catch (error) {
+            console.error('Chat Error:', error);
+            removeMessage(loadingId); // 에러 나도 로딩은 지워야 함
+            appendMessage('bot', "서버 연결에 실패했습니다. API 키를 확인해주세요. 💦");
+        }
+    }
+
+    // 화면에 메시지 추가 함수
+    function appendMessage(sender, text) {
+        const div = document.createElement('div');
+        div.className = `chat-msg ${sender}`;
+        
+        // 줄바꿈 처리
+        const formattedText = text.replace(/\n/g, '<br>');
+        
+        div.innerHTML = `<div class="chat-bubble">${formattedText}</div>`;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight; // 스크롤 맨 아래로
+    }
+
+    // 로딩 애니메이션 추가
+    function appendLoading() {
+        const id = 'loading-' + Date.now();
+        const div = document.createElement('div');
+        div.className = 'chat-msg bot';
+        div.id = id;
+        div.innerHTML = `
+            <div class="chat-bubble">
+                <div class="typing-indicator">
+                    <span></span><span></span><span></span>
+                </div>
+            </div>
+        `;
+        chatBody.appendChild(div);
+        chatBody.scrollTop = chatBody.scrollHeight;
+        return id;
+    }
+
+    // 메시지 제거 (로딩 삭제용)
+    function removeMessage(id) {
+        const el = document.getElementById(id);
+        if (el) el.remove();
+    }
+
+    // ----------------------------------------------------
+    // [쪽지(메시지) 상세 기능]
+    // ----------------------------------------------------
+
+    // 1. 대화 데이터 (DB 대용)
+    const messageDB = {
+        1: {
+            sender: "Unknown - 교수님",
+            role: "컴퓨터알고리즘",
+            avatarClass: "avatar-prof", // 파란색 배경
+            history: [
+                { type: 'received', text: "안녕하세요, 컴퓨터알고리즘 담당 홍길동입니다.", time: "10:28" },
+                { type: 'received', text: "다음 주 화요일(10/21) 수업은 학회 세미나 관계로 휴강합니다.", time: "10:29" },
+                { type: 'received', text: "보강은 다다음주 목요일 6시에 진행할 예정이니 일정 확인 부탁드립니다.", time: "10:30" }
+            ]
+        },
+        2: {
+            sender: "Unknown - User",
+            role: "학회장",
+            avatarClass: "avatar-stud", // 회색 배경
+            history: [
+                { type: 'received', text: "형! 이번 주 과제 다 하셨어요?", time: "어제 18:00" },
+                { type: 'sent', text: "아니 아직 시작도 안 했는데.. 왜?", time: "어제 19:20" },
+                { type: 'received', text: "아 다름이 아니라 오늘 저녁 6시에 학생회 회의 있는거 잊지 않으셨죠?", time: "어제 19:25" },
+                { type: 'received', text: "꼭 오셔야 해요!", time: "어제 19:25" }
+            ]
+        }
+    };
+
+    let currentMsgId = null; // 현재 보고 있는 메시지 ID
+
+    // 목록 -> 상세 화면 전환
+    function openMsgDetail(id) {
+        const data = messageDB[id];
+        if(!data) return;
+
+        currentMsgId = id;
+
+        // 헤더 정보 세팅
+        const avatar = document.getElementById('detailAvatar');
+        avatar.className = `msg-avatar ${data.avatarClass}`;
+        avatar.innerText = "U"; // 이니셜
+
+        document.getElementById('detailSender').innerText = data.sender;
+        document.getElementById('detailRole').innerText = data.role;
+
+        // 대화 내용 렌더링
+        renderDmHistory(data.history);
+
+        // 화면 전환 (목록 숨기고 상세 보이기)
+        document.getElementById('msgListSection').style.display = 'none';
+        document.getElementById('msgDetailSection').style.display = 'flex';
+        
+        // 스크롤 맨 아래로
+        scrollToBottomDm();
+    }
+
+    // 상세 -> 목록 화면 전환 (뒤로가기)
+    function closeMsgDetail() {
+        document.getElementById('msgDetailSection').style.display = 'none';
+        document.getElementById('msgListSection').style.display = 'flex';
+        currentMsgId = null;
+    }
+
+    // 대화 내용 그리기
+    function renderDmHistory(history) {
+        const body = document.getElementById('dmChatBody');
+        body.innerHTML = ""; // 초기화
+
+        history.forEach(msg => {
+            appendDmBubble(msg.type, msg.text, msg.time);
+        });
+    }
+
+    // [수정됨] 말풍선 추가 함수 (너비 제한 문제 해결)
+    function appendDmBubble(type, text, time) {
+        const body = document.getElementById('dmChatBody');
+        
+        const div = document.createElement('div');
+        // type이 'sent'면 오른쪽, 'received'면 왼쪽 정렬
+        div.className = `dm-msg ${type}`;
+        
+        // ▼▼▼ [핵심] 인라인 스타일에서 max-width를 85%로 설정하고, 
+        // 텍스트 줄바꿈(Shift+Enter)을 반영하기 위해 CSS 클래스에 의존하도록 구조 단순화
+        div.innerHTML = `
+            <div style="display:flex; flex-direction:column; max-width:85%; align-items:${type === 'sent' ? 'flex-end' : 'flex-start'};">
+                <div class="dm-bubble">${text}</div>
+                <div class="dm-time">${time}</div>
+            </div>
+        `;
+        
+        body.appendChild(div);
+    }
+
+    // [수정됨] 답장 보내기 기능 (알림창 삭제 버전)
+    function sendDm() {
+        const input = document.getElementById('dmInput');
+        const text = input.value.trim();
+        if(!text) return;
+
+        // 현재 시간 구하기 (HH:MM)
+        const now = new Date();
+        const timeStr = `${String(now.getHours()).padStart(2,'0')}:${String(now.getMinutes()).padStart(2,'0')}`;
+
+        // 1. 화면에 내 말풍선 추가
+        appendDmBubble('sent', text, timeStr);
+
+        // 2. 데이터(messageDB)에도 저장 (임시)
+        if(currentMsgId && messageDB[currentMsgId]) {
+            messageDB[currentMsgId].history.push({
+                type: 'sent',
+                text: text,
+                time: timeStr
+            });
+        }
+
+        // 입력창 비우기 및 스크롤
+        input.value = "";
+        scrollToBottomDm();
+        
+        // (기존에 있던 showToast 코드를 삭제했습니다)
+    }
+
+    // [수정됨] 엔터키 처리 (Shift+Enter는 줄바꿈, 그냥 Enter는 전송)
+    function handleDmEnter(e) {
+        if(e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault(); // 엔터 입력 시 줄바꿈 방지
+            sendDm();
+        }
+    }
+
+    // 스크롤 맨 아래로 이동
+    function scrollToBottomDm() {
+        const body = document.getElementById('dmChatBody');
+        setTimeout(() => {
+            body.scrollTop = body.scrollHeight;
+        }, 50);
+    }
+
+    
+
+  </script>
+</body>
+</html>

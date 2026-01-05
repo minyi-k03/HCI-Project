@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>상명대학교 샘물포털 로그인</title>
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    <style>
+        /* [1] 기본 설정 */
+        :root {
+            --smu-blue: #243777;
+            --smu-dark: #333B3D;
+            --text-main: #111827;
+            --text-sub: #6B7280;
+            --input-border: #E5E7EB;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Pretendard', sans-serif;
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+            background-color: #fff;
+        }
+
+        /* [2] 왼쪽: 비주얼 영역  + 대학교 로고*/
+        .visual-section {
+            flex: 1.2;
+            background-color:var(--smu-blue);
+            background-image:url('smu_logo3.jpg');
+            background-size:70%;
+            background-repeat:no-repeat;
+            background-position:center 35%;
+            position:relative;
+            display:flex;
+            flex-direction:column;
+            justify-content:flex-end;
+            padding:60px;
+            color:white;
+        }
+        
+        /* 배경 장식 (은은한 로고 패턴 느낌) */
+        .visual-pattern {
+            position: absolute;
+            top: -10%; right: -10%;
+            width: 500px; height: 500px;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            border-radius: 50%;
+        }
+
+        .visual-logo{
+            position:absolute;
+            top:40px;
+            left:40px;
+            width:180px;
+            height:auto;
+            z-index:10;
+            filter:brightness(0) invert(1)
+        }
+
+        .visual-text {
+            position: relative;
+            z-index: 2;
+            animation: fadeUp 1s ease-out;
+        }
+        .visual-text h1 { font-size: 3.2rem; font-weight: 800; margin-bottom: 15px; line-height: 1.1; }
+        .visual-text p { font-size: 1.1rem; opacity: 0.8; font-weight: 300; }
+
+        /* [3] 오른쪽: 로그인 폼 */
+        .login-section {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #fff;
+
+            padding-top:0px;
+            
+
+            
+        }
+
+        .login-container {
+            width: 100%;
+            max-width: 400px;
+            animation: fadeIn 0.8s ease-out;
+        }
+
+        /*언어 변환 CSS*/
+        .lang-switch{
+            position: absolute;
+            top: 30px;
+            right: 30px;
+            font-size: 0.9rem;
+            font-weight: 800;       /* 굵게 표시 */
+            color: var(--smu-blue); /* 상명대 파란색 적용 (또는 #243777) */
+            cursor: default;        /* 마우스 올려도 클릭 모양 안 나오게 */
+            z-index: 10;
+        }
+
+        
+
+        .logo-area { 
+            cursor:pointer;
+            border-radius:12px;
+            transition:background 0.2s;
+            margin-bottom:40px;
+        }
+
+        .logo-area:hover{
+            background-color:rgba(255,255,255,0.1);
+        }
+
+        .logo-text { font-size: 2.0rem; font-weight: 900; color: var(--smu-blue); letter-spacing: 1px; }
+        .welcome-text { margin-top: 10px; font-size: 1.3rem; font-weight: 700; color: var(--text-main); }
+        .sub-text { margin-top: 8px; color: var(--text-sub); font-size: 0.9rem; }
+
+        /* 폼 스타일 */
+        .input-group { margin-bottom: 20px; }
+        .input-label { display: block; font-size: 0.9rem; font-weight: 600; color: var(--text-main); margin-bottom: 8px; }
+        .input-field {
+            width: 100%; padding: 14px 16px;
+            border: 1px solid var(--input-border); border-radius: 12px;
+            font-size: 1rem; transition: 0.2s; outline: none; background-color: #F9FAFB;
+        }
+        .input-field:focus {
+            border-color: var(--smu-blue); background-color: #fff;
+            box-shadow: 0 0 0 4px rgba(0, 62, 126, 0.1);
+        }
+
+        .options { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; font-size: 0.9rem; }
+        .keep-login { display: flex; align-items: center; gap: 8px; color: var(--text-sub); cursor: pointer; }
+        .find-link { color: var(--smu-blue); text-decoration: none; font-weight: 600; }
+
+        .btn-login {
+            width: 100%; padding: 16px;
+            background-color: var(--smu-blue); color: white;
+            font-size: 1rem; font-weight: 700; border: none; border-radius: 12px;
+            cursor: pointer; transition: 0.2s;
+            box-shadow: 0 4px 6px -1px rgba(0, 62, 126, 0.2);
+        }
+        .btn-login:hover { background-color: var(--smu-dark); transform: translateY(-2px); }
+
+        .footer { margin-top: 40px; text-align: center; font-size: 0.8rem; color: #9CA3AF; }
+        
+        .btn-extend {
+            background: #eff6ff; color: #2563eb; 
+            border: 1px solid transparent;
+            padding: 5px 12px; border-radius: 20px; 
+            font-size: 0.75rem; font-weight: 700; 
+            cursor: pointer; transition: 0.2s;
+        }   
+        .btn-extend:hover { 
+            background: #2563eb; color: white;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3);
+        }
+        .btn-extend:active { transform: translateY(0); }
+
+        @keyframes fadeUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+        
+        @media (max-width: 768px) { .visual-section { display: none; } .login-section { padding: 20px; } }
+
+    </style>
+</head>
+<body>
+
+    <div class="visual-section">
+        <h1>Global Dynamic</h1>
+        <p>상명대학교 통합로그인 시스템에 오신 것을 환영합니다</p>
+    </div>
+
+    <div class="login-section">
+
+        
+        
+
+        <div class="login-container">
+            <div class="logo-area">
+                <div class="logo-text" data-key="logoTitle">상명대학교</div>
+                <h2 class="welcome-text" data-key = "loginTitle">통합 로그인</h2>
+                <p class="sub-text" data-key = "loginDesc">서비스 이용을 위해 로그인해주세요</p>
+            </div>
+
+            <form onsubmit="handleLogin(event)">
+                <div class="input-group">
+                    <label for="userid" class="input-label" data-key="labelId">학번 / 사번</label>
+                    <input type="text" id="userid" class="input-field" placeholder="학번을 입력하세요" autocomplete="off">
+                </div>
+
+                <div class="input-group">
+                    <label for="userpw" class="input-label" data-key="labelPw">비밀번호</label>
+                    <input type="password" id="userpw" class="input-field" placeholder="비밀번호를 입력하세요">
+                </div>
+
+                <div class="options">
+                    <label class="keep-login"><input type="checkbox"><span data-key="saveId"> 학번/교직원번호 저장</span></label>
+                    <div class="find-group">
+                        <a href="#" class="find-link" data-key="findPw">비밀번호 찾기</a>
+                        <span style="margin:0 8px; color:#ddd;">|</span>
+                        <a href="#" class="find-link" data-key="findId">학번 조회</a>
+                    </div>
+                    
+                </div>
+
+                <button type="submit" class="btn-login" data-key="btnLogin">로그인</button>
+            </form>
+
+            <div class="footer">© SANGMYUNG UNIVERSITY. All Rights Reserved.</div>
+        </div>
+    </div>
+
+    <script>
+        // [1] 페이지 로드 시: 이미 로그인 되어 있는지 확인
+        window.onload = function() {
+            // 이미 로그인 정보가 있다면 -> 바로 대시보드로 이동 (뒤로가기 불가)
+            if (sessionStorage.getItem('isLoggedIn') === 'true') {
+                window.location.replace('샘물포털.html'); // 파일명이 다르면 여기를 수정하세요!
+            }
+        };
+
+        function handleLogin(e) {
+            e.preventDefault(); // 1. 폼이 서버로 전송되어 새로고침되는 것을 막음
+
+            const id = document.getElementById('userid').value;
+            const pw = document.getElementById('userpw').value;
+
+            // 2. 간단한 입력 확인 (빈칸이면 알림)
+            if(!id || !pw) {
+                alert('학번과 비밀번호를 모두 입력해주세요.');
+                return;
+            }
+
+            // 3. 로그인 성공 처리
+            // 실제로는 서버와 통신해야 하지만, 여기서는 세션 스토리지로 처리
+            sessionStorage.setItem('isLoggedIn', 'true');
+
+            // [핵심] location.href 대신 location.replace 사용
+            // replace를 사용하면 현재 페이지(로그인창) 기록을 대시보드로 덮어씌웁니다.
+            // 따라서 대시보드에서 뒤로가기를 눌러도 로그인창이 나오지 않습니다.
+            window.location.replace('샘물포털.html'); // 파일명이 다르면 여기를 수정하세요!
+        }
+
+        // -------------------------------------------------------
+        // [기존 다국어 기능 유지]
+        // -------------------------------------------------------
+        const translations = {
+            KOR: {
+                logoTitle:"상명대학교",
+                loginTitle: "통합 로그인",
+                loginDesc: "서비스 이용을 위해 로그인을 진행해주세요.",
+                labelId: "학번 / 사번",
+                placeholderId: "학번을 입력하세요",
+                labelPw: "비밀번호",
+                placeholderPw: "비밀번호를 입력하세요",
+                saveId: "학번/교직원번호 저장",
+                findPw: "비밀번호 찾기",
+                findId: "학번 조회",
+                btnLogin: "로그인"
+            },
+            ENG: {
+                logoTitle:"SangMyung University",
+                loginTitle: "Integrated Login",
+                loginDesc: "Please log in to use the service.",
+                labelId: "Student ID / Staff ID",
+                placeholderId: "Enter your ID",
+                labelPw: "Password",
+                placeholderPw: "Enter your password",
+                saveId: "Save ID",
+                findPw: "Find Password",
+                findId: "Find ID",
+                btnLogin: "Log In"
+            },
+            JPN: {
+                logoTitle:"サンミョン大学",
+                loginTitle: "統合ログイン",
+                loginDesc: "サービスを利用するためにログインしてください。",
+                labelId: "学番 / 社番",
+                placeholderId: "学番を入力してください",
+                labelPw: "パスワード",
+                placeholderPw: "パスワードを入力してください",
+                saveId: "IDを保存",
+                findPw: "パスワード検索",
+                findId: "学番検索",
+                btnLogin: "ログイン"
+            }
+        };
+
+        // [언어 변경 함수]
+        function setLanguage(lang) {
+            // 1. 텍스트 변경 (data-key 속성 가진 요소들)
+            document.querySelectorAll('[data-key]').forEach(el => {
+                const key = el.getAttribute('data-key');
+                if (translations[lang][key]) {
+                    el.innerText = translations[lang][key];
+                }
+            });
+
+            // 2. 플레이스홀더 변경 (input 태그)
+            document.getElementById('userid').placeholder = translations[lang].placeholderId;
+            document.getElementById('userpw').placeholder = translations[lang].placeholderPw;
+
+            // 3. 버튼 스타일 활성화 (진하게 표시)
+            document.querySelectorAll('.lang-switch a').forEach(btn => {
+                btn.classList.remove('active');
+                if(btn.innerText === lang) btn.classList.add('active');
+            });
+        }
+
+        // [클릭 이벤트 연결]
+        document.querySelectorAll('.lang-switch a').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                e.preventDefault(); // 링크 이동 방지
+                const selectedLang = e.target.innerText; // KOR, ENG, JPN
+                setLanguage(selectedLang);
+            });
+        });
+    </script>
+
+</body>
+</html>

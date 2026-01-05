@@ -1,0 +1,1775 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>상명대학교 통합정보시스템</title>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+    <link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.8/dist/web/static/pretendard.css" />
+    
+    <style>
+    /* =========================================
+    [1] 기본 변수 및 리셋
+       ========================================= */
+    :root {
+      --sys-blue: #243777;       /* 상명대 메인 컬러 */
+      --sys-blue-light: #3b5099; /* 호버 컬러 */
+      --sys-bg: #f3f4f6;         /* 배경색 */
+    --white: #ffffff;
+    --border-color: #e5e7eb;
+    --text-main: #1f2937;
+    --text-sub: #6b7280;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+        font-family: 'Pretendard', sans-serif;
+        background-color: var(--sys-bg);
+        color: var(--text-main);
+        height: 100vh;
+        overflow: hidden; 
+        display: flex;
+    }
+    
+    
+    .material-symbols-outlined {
+        visibility: hidden; 
+        vertical-align: middle; 
+    }
+    /* =========================================
+    [2] 좌측 사이드바 (Sidebar)
+       ========================================= */
+    .sidebar {
+        width: 260px;
+        background-color: var(--sys-blue);
+        color: var(--white);
+        display: flex;
+        flex-direction: column;
+        transition: width 0.3s ease;
+        z-index: 100;
+        flex-shrink: 0; 
+        overflow: hidden; 
+    }
+
+    .brand {
+        height: 64px;
+        display: flex;
+        align-items: center;
+        padding: 0 20px;
+        font-size: 1.1rem;
+        font-weight: 700;
+        border-bottom: 1px solid rgba(255,255,255,0.1);
+        white-space: nowrap;
+    }
+    .brand span { margin-left: 10px; font-size: 0.85rem; opacity: 0.8; font-weight: 400; }
+
+    .menu-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden; 
+        padding: 20px 0;
+    }
+
+    /* 메뉴 그룹 라벨 (줄바꿈 허용) */
+    .menu-group-label {
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        color: rgba(255,255,255,0.5);
+        margin: 15px 20px 5px;
+        font-weight: 600;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        cursor: pointer;
+        transition: color 0.2s;
+        
+        white-space: normal;      
+        word-break: keep-all;     
+        line-height: 1.4;
+    }
+    .menu-group-label:hover { color: var(--white); }
+    .menu-item {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+        font-size: 0.95rem;
+        color: rgba(255,255,255,0.9);
+        border-left: 4px solid transparent;
+        
+        white-space: normal;      
+        word-break: keep-all;     
+        line-height: 1.3;
+        min-height: 48px;        
+    }
+    
+    .menu-group-label span { transition: transform 0.3s; flex-shrink: 0; margin-left: 8px; }
+    
+    /* 아코디언 애니메이션 */
+    .menu-items-wrapper {
+        max-height: 0; 
+        overflow: hidden;
+        transition: max-height 0.3s ease-out; 
+    }
+    .menu-accordion.active .menu-items-wrapper {
+        max-height: 1000px; /* 충분한 높이 */
+    }
+    
+    .menu-item:hover { background-color: rgba(255,255,255,0.1); }
+    .menu-item.active {
+        background-color: rgba(255,255,255,0.15);
+        border-left-color: #60a5fa; 
+        font-weight: 600;
+        color: var(--white);
+    }
+    .menu-item .icon { margin-right: 12px; font-size: 1.2rem; flex-shrink: 0; }
+
+    /* =========================================
+    [3] 메인 콘텐츠 (Header & Workspace)
+       ========================================= */
+    .main-wrapper {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        min-width: 0; 
+    }
+    
+    /* 헤더 영역 */
+    .header {
+        height: 64px;
+        background: var(--white);
+        border-bottom: 1px solid var(--border-color);
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 30px;
+        min-width: 0; 
+    }
+    
+    .header-right { 
+        display: flex; 
+        align-items: center; 
+        gap: 15px; 
+        flex-shrink: 0; 
+        min-width: 0;
+    }
+    
+    .page-title {
+        font-size: 1.1rem;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-shrink: 1; 
+        min-width: 0; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+    }
+    .breadcrumb {
+        font-size: 0.85rem;
+        color: var(--text-sub);
+        font-weight: normal;
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        max-width: 150px; 
+    }
+
+    /* 사용자 정보 */
+    .user-info {
+        display: flex;
+        align-items: center;
+        gap: 15px;
+        font-size: 0.9rem;
+        flex-shrink: 0;
+    }
+    .user-info-text { 
+        display: flex; 
+        flex-direction: column; 
+        align-items: flex-end; 
+        margin-right: 0px; 
+        flex-shrink: 1; 
+        min-width: 0;
+        white-space: nowrap; 
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .info-major { font-size: 0.9rem; color: #1e293b; font-weight: 700; }
+    
+    /* 세션 타이머 */
+    .session-timer { 
+        display: flex; 
+        align-items: center; 
+        gap: 8px; 
+        font-size: 0.9rem; 
+        color: #475569; 
+        font-weight: 600; 
+        background: var(--white); 
+        border: 1px solid var(--border-color); 
+        padding: 5px 5px 5px 12px; 
+        border-radius: 30px; 
+        box-shadow: 0 2px 5px rgba(0,0,0,0.03); 
+        flex-shrink: 0; 
+    }
+    .session-timer .material-symbols-outlined {
+        font-size: 1.1rem;
+        color: #475569;
+        visibility: visible; 
+    }
+    #timerText { 
+        font-variant-numeric: tabular-nums; 
+        color: var(--sys-blue); 
+        font-weight: 700; 
+        margin-right: 4px; 
+        margin-left: -4px; 
+    }
+    .btn-extend { 
+        background: #eff6ff; 
+        color: #2563eb; 
+        border: 1px solid transparent; 
+        padding: 4px 12px; 
+        border-radius: 20px; 
+        font-size: 0.75rem; 
+        font-weight: 700; 
+        cursor: pointer; 
+        transition: all 0.2s ease; 
+        margin-left: auto; 
+        flex-shrink: 0; 
+    }
+    .btn-extend:hover { 
+        background: #2563eb; 
+        color: white; 
+        transform: translateY(-1px); 
+        box-shadow: 0 2px 5px rgba(37, 99, 235, 0.3); 
+    }
+
+    .img-profile {
+        width: 42px; height: 42px; background: #243777; color: white; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 0.9rem; object-fit: cover;
+    }
+    .logout-btn {
+        padding: 6px 12px;
+        border: 1px solid var(--border-color);
+        border-radius: 6px;
+        background: white;
+        cursor: pointer;
+        font-size: 0.85rem;
+        flex-shrink: 0;
+    }
+    .logout-btn:hover { background: #f9fafb; }
+
+    .workspace {
+        flex: 1;
+        padding: 30px;
+        overflow-y: auto;
+    }
+
+    /* =========================================
+    [4] UI 컴포넌트 (검색, 테이블, 뱃지)
+       ========================================= */
+    .screen { display: none; animation: fadeIn 0.3s ease-out; }
+    .screen.active { display: block; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+    .search-bar {
+        background: var(--white);
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+        flex-wrap: wrap; 
+    }
+    .search-group { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+    .search-label { font-weight: 600; font-size: 0.9rem; color: var(--text-main); }
+    .form-select {
+        padding: 8px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        outline: none;
+        min-width: 120px;
+    }
+    .btn-search {
+        margin-left: auto;
+        background-color: var(--sys-blue);
+        color: white;
+        border: none;
+        padding: 10px 24px;
+        border-radius: 6px;
+        font-weight: 600;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        flex-shrink: 0; 
+    }
+    .btn-search:hover { background-color: var(--sys-blue-light); }
+
+    /* 데이터 테이블 정렬 개선 */
+    .data-grid {
+        background: var(--white);
+        border-radius: 8px;
+        border: 1px solid var(--border-color);
+        overflow: hidden;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+    }
+    .sys-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 0.9rem;
+    }
+    .sys-table th {
+        background-color: #f9fafb;
+        color: var(--text-sub);
+        font-weight: 600;
+        text-align: center;
+        padding: 12px;
+        border-bottom: 1px solid var(--border-color);
+        vertical-align: middle; /* 세로 중앙 정렬 */
+    }
+    .sys-table td {
+        padding: 14px 12px;
+        border-bottom: 1px solid var(--border-color);
+        text-align: center;
+        color: var(--text-main);
+        vertical-align: middle; /* 세로 중앙 정렬 */
+    }
+    .sys-table tr:hover { background-color: #f8fafc; }
+
+    /* 뱃지 정렬 개선 */
+    .badge { 
+        padding: 4px 8px; 
+        border-radius: 4px; 
+        font-size: 0.75rem; 
+        font-weight: 700;
+        display: inline-flex;       /* 플렉스로 내부 정렬 */
+        align-items: center;        /* 세로 중앙 */
+        justify-content: center;    /* 가로 중앙 */
+        vertical-align: middle;     /* 테이블 내 정렬 */
+        min-width: 60px;
+    }
+    .badge-blue { background: #eff6ff; color: #2563eb; }
+    .badge-green { background: #dcfce7; color: #16a34a; }
+    .badge-gray { background: #f3f4f6; color: #4b5563; }
+    .badge-red { background: #fee2e2; color: #dc2626; } 
+
+    .toast-container {
+        position: fixed;
+        bottom: 30px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 2000;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
+    .toast {
+        background-color: rgba(31, 41, 55, 0.9);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 50px;
+        font-size: 0.9rem;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        opacity: 0;
+        transform: translateY(20px);
+        transition: all 0.3s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .toast-success { border-left: 4px solid #10b981; }
+    .toast-error { border-left: 4px solid #ef4444; }
+
+    
+    .modal-overlay {
+        position: fixed;
+        top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    .modal-overlay.open { display: flex; opacity: 1; }
+    .modal-window {
+        background: white;
+        width: 500px;
+        max-width: 90%;
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+        padding: 30px;
+        transform: scale(0.9);
+        transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .modal-overlay.open .modal-window { transform: scale(1); }
+    .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid var(--border-color);
+        padding-bottom: 15px;
+    }
+    .modal-title { font-size: 1.2rem; font-weight: 700; color: var(--sys-blue); }
+    .modal-close { cursor: pointer; color: var(--text-sub); }
+    .modal-body { font-size: 0.95rem; line-height: 1.6; color: var(--text-main); margin-bottom: 25px;}
+    .modal-footer { display: flex; justify-content: flex-end; gap: 10px; }
+    .btn-modal { padding: 8px 16px; border-radius: 6px; cursor: pointer; font-weight: 600; border: none; }
+    .btn-modal-close { background: #e5e7eb; color: var(--text-main); }
+    .btn-modal-action { background: var(--sys-blue); color: white; }
+
+    /* =========================================
+    [6] 반응형 미디어 쿼리
+       ========================================= */
+    @media (max-width: 900px) {
+        .sidebar { width: 200px; } 
+        .info-major, .btn-extend { display: none; }
+        .header-right { gap: 10px; }
+        .user-info { gap: 10px; }
+        .header { padding: 0 15px; }
+        .breadcrumb { max-width: 100px; }
+    }
+
+    @media (max-width: 700px) {
+        .sidebar { width: 64px; } 
+        .brand span, .menu-group-label { display: none; }
+        .menu-item { justify-content: center; padding: 12px 0; font-size: 0; }
+        .menu-item .icon { margin-right: 0; font-size: 1.2rem; }
+        .menu-item.active { font-size: 0.95rem; text-indent: -9999px; }
+        .menu-item.active .icon { text-indent: 0; }
+        .breadcrumb { display: none; }
+        .user-info-text { display: none; }
+        .user-info { gap: 5px; } 
+        .logout-btn { padding: 6px 8px; }
+    }
+    </style>
+</head>
+<body>
+
+<aside class="sidebar">
+    <div class="brand">
+        SMU <span>통합정보시스템</span>
+    </div>
+
+    <div class="menu-container">
+        
+        <div class="menu-accordion active">
+            <div class="menu-group-label" onclick="toggleAccordion(this)">
+                학사 관리
+                <span class="material-symbols-outlined" style="font-size:1rem;">expand_less</span>
+            </div>
+            <div class="menu-items-wrapper" style="max-height: 500px;">
+                <div class="menu-item active" onclick="switchScreen('student-info', this, '기본 학적 조회')">
+                    <span class="material-symbols-outlined icon">badge</span>
+                    기본 학적 조회
+                </div>
+                <div class="menu-item" onclick="switchScreen('grades', this, '전체 성적 조회')">
+                    <span class="material-symbols-outlined icon">bar_chart</span>
+                    전체 성적 조회
+                </div>
+                <div class="menu-item" onclick="switchScreen('classes', this, '수강 내역 조회')">
+                    <span class="material-symbols-outlined icon">list_alt</span>
+                    수강 내역 조회
+                </div>
+                <div class="menu-item" onclick="switchScreen('course-evaluation', this, '강의 평가')">
+                    <span class="material-symbols-outlined icon">rate_review</span>
+                    강의 평가
+                </div>
+                <div class="menu-item" onclick="switchScreen('change-status', this, '휴/복학 자퇴 신청')">
+                    <span class="material-symbols-outlined icon">assignment</span>
+                    휴/복학 자퇴 신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('transfer-major', this, '전과/마이크로 전공 신청')">
+                    <span class="material-symbols-outlined icon">edit_note</span>
+                    전과/마이크로 전공 신청
+                </div>
+            </div>
+        </div>
+        
+        <div class="menu-accordion">
+            <div class="menu-group-label" onclick="toggleAccordion(this)">
+                졸업
+                <span class="material-symbols-outlined" style="font-size:1rem;">expand_more</span>
+            </div>
+            <div class="menu-items-wrapper">
+                <div class="menu-item" onclick="switchScreen('early-graduation', this, '조기 졸업 신청')">
+                    <span class="material-symbols-outlined icon">verified</span>
+                    조기졸업신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('graduation-application', this, '졸업 신청')">
+                    <span class="material-symbols-outlined icon">school</span>
+                    졸업신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('graduation-delay', this, '졸업 유예 신청')">
+                    <span class="material-symbols-outlined icon">event_busy</span>
+                    졸업 유예 신청
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <div class="menu-group-label" onclick="toggleAccordion(this)">
+                행정 / 등록
+                <span class="material-symbols-outlined" style="font-size:1rem;">expand_more</span>
+            </div>
+            <div class="menu-items-wrapper">
+                <div class="menu-item" onclick="switchScreen('tuition', this, '등록금 고지서 출력')">
+                    <span class="material-symbols-outlined icon">receipt_long</span>
+                    등록금 고지서 출력
+                </div>
+                <div class="menu-item" onclick="switchScreen('scholarship', this, '장학 수혜 내역 조회')">
+                    <span class="material-symbols-outlined icon">school</span>
+                    장학 수혜 내역 조회
+                </div>
+            </div>
+        </div>
+        
+        <div class="menu-accordion">
+            <div class="menu-group-label" onclick="toggleAccordion(this)">
+                교과 외 활동
+                <span class="material-symbols-outlined" style="font-size:1rem;">expand_more</span>
+            </div>
+            <div class="menu-items-wrapper">
+                <div class="menu-item" onclick="switchScreen('non-curriculum', this, '비교과 프로그램 신청')">
+                    <span class="material-symbols-outlined icon">star_rate</span>
+                    비교과 프로그램 신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('seasonal-class', this, '계절 수업 신청')">
+                    <span class="material-symbols-outlined icon">calendar_month</span>
+                    계절 수업 신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('internship', this, '현장 실습 내역')">
+                    <span class="material-symbols-outlined icon">work</span>
+                    현장 실습 내역
+                </div>
+                <div class="menu-item" onclick="switchScreen('volunteer', this, '사회 봉사 내역')">
+                    <span class="material-symbols-outlined icon">volunteer_activism</span>
+                    사회 봉사 내역
+                </div>
+            </div>
+        </div>
+
+        <div class="menu-accordion">
+            <div class="menu-group-label" onclick="toggleAccordion(this)">
+                학생 지원
+                <span class="material-symbols-outlined" style="font-size:1rem;">expand_more</span>
+            </div>
+            <div class="menu-items-wrapper">
+                <div class="menu-item" onclick="switchScreen('student-support', this, '학생 지원 프로그램')">
+                    <span class="material-symbols-outlined icon">support</span>
+                    학생 지원 프로그램
+                </div>
+                
+                <div class="menu-item" onclick="switchScreen('dorm-apply-seoul', this, '입사신청(재학생-서울)')">
+                    <span class="material-symbols-outlined icon">edit_calendar</span>
+                    입사신청(재학생-서울)
+                </div>
+                <div class="menu-item" onclick="switchScreen('dorm-apply-cheonan', this, '입사신청(재학생-천안)')">
+                    <span class="material-symbols-outlined icon">edit_calendar</span>
+                    입사신청(재학생-천안)
+                </div>
+                <div class="menu-item" onclick="switchScreen('dorm-merit-penalty', this, '상벌현황조회(학생)')">
+                    <span class="material-symbols-outlined icon">grading</span>
+                    상벌현황조회(학생)
+                </div>
+                <div class="menu-item" onclick="switchScreen('dorm-roommate', this, '룸메이트신청')">
+                    <span class="material-symbols-outlined icon">person_add</span>
+                    룸메이트신청
+                </div>
+                <div class="menu-item" onclick="switchScreen('dorm-leave-extend', this, '외박 및 귀사시간 연장 신청(학생)')">
+                    <span class="material-symbols-outlined icon">schedule_send</span>
+                    외박 및 귀사시간 연장 신청(학생)
+                </div>
+                <div class="menu-item" onclick="switchScreen('dorm-receipt-print', this, '입사/납부비확인서 출력')">
+                    <span class="material-symbols-outlined icon">print</span>
+                    입사/납부비확인서 출력
+                </div>
+                </div>
+        </div>
+    </div>
+</aside>
+
+<main class="main-wrapper">
+    
+    <header class="header">
+        <div class="page-title">
+            <span class="material-symbols-outlined" style="color:var(--sys-blue)">folder_open</span>
+            <span id="header-title">기본 학적 조회</span>
+            <span class="breadcrumb"></span>
+        </div>
+        <div class="header-right">
+            <div class="session-timer">
+                <span class="material-symbols-outlined" style="font-size:16px;">schedule</span>
+                <span id="timerText">29:59</span>
+                <button class="btn-extend" onclick="extendSession()">연장</button>
+            </div>
+            <div class="user-info-text">
+                <span class="info-major">소프트웨어학과</span>
+            </div>
+            <div class="user-info">
+                <img src="수뭉이.jpg" alt="프로필" class="img-profile">
+                <span><strong>수뭉이</strong></span>
+                <button class="logout-btn" onclick="window.location.href='샘물포털.html'">닫기</button>
+            </div>
+        </div>
+    </header>
+
+    <div class="workspace">
+
+        <div id="screen-student-info" class="screen active">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학번</span>
+                    <input type="text" value="20240000" class="form-select" readonly style="background:#f3f4f6">
+                </div>
+                <div class="search-group">
+                    <span class="search-label">성명</span>
+                    <input type="text" value="수뭉이" class="form-select" readonly style="background:#f3f4f6">
+                </div>
+                <button class="btn-search" onclick="showToast('학적 정보가 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+
+            <div class="data-grid">
+                <table class="sys-table" style="text-align: left;">
+                    <tr>
+                        <th width="15%">성명(한글)</th>
+                        <td width="35%">수뭉이</td>
+                        <th width="15%">성명(영문)</th>
+                        <td width="35%">Soo Mung</td>
+                    </tr>
+                    <tr>
+                        <th>소속 대학</th>
+                        <td>상명대학교</td>
+                        <th>학부(과)</th>
+                        <td>소프트웨어학과</td>
+                    </tr>
+                    <tr>
+                        <th>학년</th>
+                        <td>2학년</td>
+                        <th>학적상태</th>
+                        <td><span class="badge badge-green">재학</span></td>
+                    </tr>
+                    <tr>
+                        <th>입학일자</th>
+                        <td>2024.03.02</td>
+                        <th>이메일</th>
+                        <td>smu@sample.ac.kr</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+    <div id="screen-grades" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2024-2학기</option>
+                        <option>2024-1학기</option>
+                        <option>2023-2학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('성적 정보가 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+
+            <div class="data-grid">
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>년도</th>
+                            <th>학기</th>
+                            <th>신청학점</th>
+                            <th>취득학점</th>
+                            <th>평점평균</th>
+                            <th>석차</th>
+                            <th>상세</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024</td>
+                            <td>1학기</td>
+                            <td>18</td>
+                            <td>18</td>
+                            <td style="font-weight:bold; color:var(--sys-blue)">4.50</td>
+                            <td>1 / 45</td>
+                            <td><button class="logout-btn" style="padding:2px 8px;" onclick="openModal('성적 상세', '2024-1학기 성적표입니다.', '닫기')">보기</button></td>
+                        </tr>
+                        <tr>
+                            <td>2024</td>
+                            <td>2학기</td>
+                            <td>19</td>
+                            <td>19</td>
+                            <td style="font-weight:bold; color:var(--sys-blue)">4.25</td>
+                            <td>3 / 42</td>
+                            <td><button class="logout-btn" style="padding:2px 8px;" onclick="openModal('성적 상세', '2024-2학기 성적표입니다.', '닫기')">보기</button></td>
+                            </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-classes" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2023-1학기</option>
+                        <option>2024-1학기</option>
+                        <option>2024-2학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('수강 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+            <div class="data-grid">
+                <table class="sys-table">
+                    <thead>
+                        <tr><th>학수번호</th><th>교과목명</th><th>이수구분</th><th>학점</th><th>담당교수</th></tr>
+                    </thead>
+                    <tbody>
+                        <tr><td>CS101</td><td>컴퓨터 알고리즘</td><td>전공필수</td><td>3</td><td>홍길동</td></tr>
+                        <tr><td>CS102</td><td>인공지능 기초</td><td>전공선택</td><td>3</td><td>김수뭉</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        
+        <div id="screen-course-evaluation" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2024-2학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('강의 평가 목록이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+
+            <div class="data-grid" style="margin-top: 20px;">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">중간 강의 평가</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>학수번호</th>
+                            <th>교과목명</th>
+                            <th>담당교수</th>
+                            <th width="15%">평가 기간</th>
+                            <th width="10%">평가 상태</th>
+                            <th width="10%">진행</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CS101</td>
+                            <td>컴퓨터 알고리즘 (중간)</td>
+                            <td>홍길동</td>
+                            <td>2024.10.01 ~ 10.15</td>
+                            <td><span class="badge badge-gray">평가 완료</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>CS102</td>
+                            <td>인공지능 기초 (중간)</td>
+                            <td>김수뭉</td>
+                            <td>2024.10.01 ~ 10.15</td>
+                            <td><span class="badge badge-blue">미완료</span></td>
+                            <td><button class="btn-search" style="margin:0; padding:5px 10px; background:#2563eb; font-weight:700;" onclick="openModal('강의 평가', '인공지능 기초 과목에 대한 강의 평가를 진행하시겠습니까?<br>평가는 익명으로 처리됩니다.', '평가 시작')">평가하기</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+            <div class="data-grid" style="margin-top: 20px;">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">기말 강의 평가</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>학수번호</th>
+                            <th>교과목명</th>
+                            <th>담당교수</th>
+                            <th width="15%">평가 기간</th>
+                            <th width="10%">평가 상태</th>
+                            <th width="10%">진행</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>CS101</td>
+                            <td>컴퓨터 알고리즘 (기말)</td>
+                            <td>홍길동</td>
+                            <td>2024.12.15 ~ 12.30</td>
+                            <td><span class="badge badge-green">기간 아님</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>CS102</td>
+                            <td>인공지능 기초 (기말)</td>
+                            <td>김수뭉</td>
+                            <td>2024.12.15 ~ 12.30</td>
+                            <td><span class="badge badge-green">기간 아님</span></td>
+                            <td>-</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>  
+
+        <div id="screen-change-status" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2024-2학기</option>
+                        <option>2024-1학기</option>
+                        <option>2023-2학기</option>
+                    </select>
+                </div>
+        <button class="btn-search" onclick="showToast('휴/복학/자퇴 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+    </div>
+
+    <div class="data-grid">
+        <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">휴/복학/자퇴 신청 내역</h3>
+        <table class="sys-table">
+            <thead>
+                <tr>
+                <th>신청 종류</th>
+                <th>신청 학기</th>
+                <th>신청일</th>
+                <th>처리 상태</th>
+                <th>처리일</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>휴학</td>
+                    <td>2025년 1학기</td>
+                    <td>2024.12.20</td>
+                    <td><span class="badge badge-blue">심사 중</span></td>
+                    <td>-</td>
+                </tr>
+                <tr>
+                    <td>복학</td>
+                    <td>2024년 2학기</td>
+                    <td>2024.08.10</td>
+                    <td><span class="badge badge-green">승인 완료</span></td>
+                    <td>2023.11.05</td>
+                <tr>
+                            <td>자퇴</td>
+                            <td>-</td>
+                            <td>2023.03.01</td>
+                            <td><span class="badge badge-red">반려</span></td>
+                            <td>2023.03.05</td>
+                        </tr>
+            </tbody>
+        </table>
+    </div>
+    <div style="text-align: right; padding: 15px 20px;">
+        <button class="btn-search" style="margin-right: 0;" onclick="openModal('휴/복학/자퇴 신청', '휴/복학/자퇴를 신청하겠습니까?.', '신청')"><span class="material-symbols-outlined">edit</span> 신규 신청</button>
+    </div>
+</div>
+        
+        <div id="screen-transfer-major" class="screen">
+            <div class="search-bar">
+                    <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2024-2학기</option>
+                        <option>2024-1학기</option>
+                        <option>2023-2학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('조회 완료')"><span class="material-symbols-outlined">search</span>조회</button>
+            </div>
+            <div class="data-grid">
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>신청 시기</th>
+                            <th>신청 (변경) 전</th>
+                            <th>신청 (변경) 후</th>
+                            <th>처리 상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>전과</td>
+                            <td>2024-1학기</td>
+                            <td>전자공학과</td>
+                            <td>소트프웨어학과</td>
+                            <td><span class="badge badge-blue">심사 중</span></td>
+                        </tr>
+                        <tr>
+                            <td>마이크로전공</td>
+                            <td>2024-2학기</td>
+                            <td>(없음)</td>
+                            <td>파이썬 심화</td>
+                            <td><span class="badge badge-green">승인 완료</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('전과/마이크로 전공 신청', '신청 기간이 아닙니다.', '확인')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+            
+        <div id="screen-early-graduation" class="screen">
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">조기졸업 신청 내역</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>신청 학기</th>
+                            <th>신청일</th>
+                            <th>졸업 예상 학기</th>
+                            <th>신청 상태</th>
+                            <th>요건 충족 여부</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2025년 2학기</td>
+                            <td>2025.03.15</td>
+                            <td>2026년 2월</td>
+                            <td><span class="badge badge-red">반려</span></td>
+                            <td>미충족</td>
+                        </tr>
+                        <tr>
+                            <td>2024년 2학기</td>
+                            <td>2024.03.15</td>
+                            <td>2025년 2월</td>
+                            <td><span class="badge badge-blue">심사 대기</span></td>
+                            <td>충족</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('조기 졸업 신청', '조기 졸업 신청서를 작성하시겠습니까?', '작성')"><span class="material-symbols-outlined">edit</span> 조기 졸업 신청</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="screen-graduation-application" class="screen">
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">졸업 신청 (졸업 사정 결과)</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>졸업 대상 학기</th>
+                            <th>졸업 이수 학점</th>
+                            <th>전공 이수 학점</th>
+                            <th>졸업 시험/논문</th>
+                            <th>최종 판정</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026년 2월</td>
+                            <td>130/130</td>
+                            <td>60/60</td>
+                            <td><span class="badge badge-green">합격</span></td>
+                            <td><span class="badge badge-blue">졸업 예정</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('졸업 사정표 출력', '졸업 사정표를 출력하시겠습니까?', '출력')"><span class="material-symbols-outlined">edit</span> 졸업 사정표 출력</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-graduation-delay" class="screen">
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">졸업 유예 신청 내역</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>신청 학기</th>
+                            <th>신청일</th>
+                            <th>유예 기간</th>
+                            <th>처리 상태</th>
+                            <th>등록금 납부 여부</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2026년 1학기</td>
+                            <td>2025.12.01</td>
+                            <td>1학기</td>
+                            <td><span class="badge badge-blue">승인 대기</span></td>
+                            <td><span class="badge badge-gray">미납</span></td>
+                        </tr>
+                        <tr>
+                            <td>2025년 2학기</td>
+                            <td>2025.06.01</td>
+                            <td>1학기</td>
+                            <td><span class="badge badge-green">승인 완료</span></td>
+                            <td><span class="badge badge-green">납부 완료</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('졸업 유예 신청', '졸업 유예를 신청하시겠습니까?', '신청')"><span class="material-symbols-outlined">edit</span> 졸업 유예 신청</button>
+                </div>
+            </div>
+        </div>
+        
+        <div id="screen-scholarship" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2024-2학기</option>
+                        <option>2024-1학기</option>
+                        <option>2023-2학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('장학 수혜 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span>조회</button>
+            </div>
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color); margin: 0;">
+                    장학 수혜 내역
+                </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>년도</th>
+                            <th>학기</th>
+                            <th>장학명</th>
+                            <th>금액</th>
+                            <th>지급구분</th>
+                            <th>비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024</td>
+                            <td>1학기</td>
+                            <td>성적우수장학금(A)</td>
+                            <td>2,000,000</td>
+                            <td><span class="badge badge-blue">등록금감면</span></td>
+                            <td>-</td>
+                        </tr>
+                        <tr>
+                            <td>2023</td>
+                            <td>2학기</td>
+                            <td>국가장학금 I유형</td>
+                            <td>1,500,000</td>
+                            <td><span class="badge badge-blue">등록금감면</span></td>
+                            <td>한국장학재단</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-tuition" class="screen">
+            <div class="data-grid" style="padding: 20px;">
+                <h3 style="color: var(--text-main, #333); margin: 0 0 15px 0; text-align: center;">등록금 고지 내역</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>년도/학기</th>
+                            <th>납부 금액</th>
+                            <th>납부 기한</th>
+                            <th>납부 여부</th>
+                            <th>비고</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                    <td>등록금</td>
+                    <td>2024년 1학기</td>
+                    <td style="font-weight: 600;">4,500,000</td>
+                    <td>2024.02.20</td>
+                    <td class="status-rejected" style="color: #dc3545; font-weight: 600;">미납</td>
+                    <td>장학금 2,000,000원 감면</td>
+                        </tr>
+                        <tr>
+                    <td>등록금</td>
+                    <td>2023년 2학기</td>
+                    <td>4,800,000</td>
+                    <td>2023.08.25</td>
+                    <td class="status-approved" style="color: #28aa45; font-weight: 600;">납부 완료</td>
+                    <td>-</td>
+                </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('등록금 고지서 상세 출력', '등록금 고지서를 출력하시겠습니까?', '출력')"><span class="material-symbols-outlined">edit</span> 등록금 고지서 상세 출력</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-non-curriculum" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/계절</span>
+                    <select class="form-select"><option>2024-하계</option></select>
+                </div>
+                <button class="btn-search" onclick="showToast('비교과 프로그램 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+        <div class="data-grid" style="margin-top:0; padding-top:0;">
+        <h3 style="
+            background:#f1f5f9;
+            color:var(--text-main);
+            padding:10px 20px;
+            font-size:1rem;
+            border-bottom:1px solid var(--border-color);
+            margin:0;
+        ">
+            비교과 프로그램 내역
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>학년도/계절</th>
+                            <th>교과목명</th>
+                            <th>학점</th>
+                            <th width="15%">신청 상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2024-하계</td>
+                            <td>인공지능 특강</td>
+                            <td>3</td>
+                            <td><span class="badge badge-green">수강 완료</span></td>
+                        </tr>
+                        <tr>
+                    <td>2024-동계</td>
+                    <td>데이터 분석 입문</td>
+                    <td>2</td>
+                    <td><span class="badge badge-blue">신청 완료</span></td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-seasonal-class" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/계절</span>
+                    <select class="form-select"><option>2024-하계</option></select>
+                </div>
+                <button class="btn-search" onclick="showToast('계절학기 수업 신청 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+            <div class="data-grid" style="padding: 20px;">
+                <h3 style="color: var(--text-main, #333); margin: 0 0 15px 0; text-align: center;">계절학기 수업 신청 내역</h3>
+                <table class="sys-table">
+                <thead>
+                <tr>
+                    <th>년도/학기</th>
+                    <th>과목 코드</th>
+                    <th>과목명</th>
+                    <th>학점</th>
+                    <th>신청일</th>
+                    <th>상태</th>
+                </tr>
+            </thead>
+            <tbody>
+                        <tr>
+                    <td>2025-하계</td>
+                    <td>SUM101</td>
+                    <td>데이터 분석 기초</td>
+                    <td>3</td>
+                    <td>2025.06.01</td>
+                    <td class="status-approved" style="color: #28aa45; font-weight: 600;">수강 확정</td>
+                </tr>
+                <tr>
+                    <td>2024-동계</td>
+                    <td>WIN205</td>
+                    <td>고급 영어 회화</td>
+                    <td>2</td>
+                    <td>2024.12.10</td>
+                    <td class="status-approved" style="color: #28aa45; font-weight: 600;">수강 확정</td>
+                </tr>
+                <tr>
+                    <td>2024-하계</td>
+                    <td>SUM310</td>
+                    <td>파이썬 프로그래밍</td>
+                    <td>3</td>
+                    <td>2024.06.05</td>
+                    <td class="status-pending" style="color: #ff9800; font-weight: 600;">신청 완료</td>
+                </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; margin-top: 15px;">
+                    <button style="padding: 8px 15px; background-color: #dc3545; color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem;" onclick="openModal('신청 취소', '선택한 계절 수업을 취소하시겠습니까?', '취소')">신청 취소</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-internship" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+            <span class="search-label">실습 기간</span>
+            <select class="form-select">
+                <option>전체</option>
+            </select>
+        </div>
+                <button class="btn-search" onclick="showToast('현장 실습 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 현장 실습 내역 조회</button>
+            </div>
+            <div class="data-grid">
+                <h3 style="
+            background:#f1f5f9;
+            color:var(--text-main);
+            padding:10px 20px;
+            font-size:1rem;
+            border-bottom:1px solid var(--border-color);
+            margin:0;
+        ">
+            현장 실습 내역
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>기업명</th>
+                            <th>실습 기간</th>
+                            <th>구분</th>
+                            <th width="10%">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>(주)스마트테크</td>
+                            <td>2024.03.01 ~ 06.30</td>
+                            <td>장기 (전공)</td>
+                            <td><span class="badge badge-green">완료</span></td>
+                        </tr>
+                        <tr>
+                    <td>(주)미래혁신</td>
+                    <td>2025.01.01 ~ 01.31</td>
+                    <td>단기 (방학)</td>
+                    <td><span class="badge badge-blue">신청 완료</span></td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-volunteer" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+            <span class="search-label">봉사 기간</span>
+            <select class="form-select">
+                <option>전체</option>
+            </select>
+        </div>
+                <button class="btn-search" onclick="showToast('사회 봉사 내역 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+            <div class="data-grid">
+                <h3 style="
+            background:#f1f5f9;
+            color:var(--text-main);
+            padding:10px 20px;
+            font-size:1rem;
+            border-bottom:1px solid var(--border-color);
+            margin:0;
+        ">
+            사회 봉사 내역
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>활동명</th>
+                            <th>활동 일자</th>
+                            <th>봉사 시간</th>
+                            <th width="15%">인정 상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>지역 아동센터 멘토링</td>
+                            <td>2024.09.01 ~ 12.30</td>
+                            <td>50시간</td>
+                            <td><span class="badge badge-green">인정 완료</span></td>
+                        </tr>
+                        <tr>
+                    <td>교내 환경 정화 활동</td>
+                    <td>2024.10.10</td>
+                    <td>4시간</td>
+                    <td><span class="badge badge-green">인정 완료</span></td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-student-support" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+            <span class="search-label">프로그램</span>
+            <select class="form-select">
+                <option>전체</option>
+            </select>
+        </div>
+                <button class="btn-search" onclick="showToast('학생 지원 프로그램 목록이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 학생 지원 프로그램 조회</button>
+            </div>
+            <div class="data-grid">
+                <h3 style="
+            background:#f1f5f9;color:var(--text-main);padding:10px 20px;font-size:1rem;border-bottom:1px solid var(--border-color);margin:0;">
+            학생 지원 프로그램 내역
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>프로그램명</th>
+                            <th>신청 기간</th>
+                            <th>구분</th>
+                            <th width="15%">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>취업 포트폴리오 경진대회</td>
+                            <td>2024.11.01 ~ 11.15</td>
+                            <td>취업 지원</td>
+                            <td><span class="badge badge-green">참여 완료</span></td>
+                        </tr>
+                        <tr>
+                    <td>심리 상담 프로그램(개인)</td>
+                    <td>수시</td>
+                    <td>복지 지원</td>
+                    <td><span class="badge badge-gray">신청 가능</span></td>
+                </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('프로그램 신청', '선택한 프로그램에 신청하시겠습니까?', '신청')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-dorm-apply-seoul" class="screen">
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">입사 신청 내역 (서울)</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>캠퍼스</th>
+                            <th>학기</th>
+                            <th>신청 기간</th>
+                            <th width="15%">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>서울</td>
+                            <td>2025-1학기</td>
+                            <td>2024.12.01 ~ 12.10</td>
+                            <td><span class="badge badge-blue">신청 중</span></td>
+                        </tr>
+                        <tr>
+                    <td>서울</td>
+                    <td>2024-2학기</td>
+                    <td>2024.06.01 ~ 06.10</td>
+                    <td><span class="badge badge-green">입사 완료</span></td>
+                </tr>
+                </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('기숙사 신청(서울)', '입사 신청서를 작성하시겠습니까?', '작성')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-dorm-apply-cheonan" class="screen">
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">입사 신청 내역 (천안)</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>캠퍼스</th>
+                            <th>학기</th>
+                            <th>신청 기간</th>
+                            <th width="15%">상태</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>천안</td>
+                            <td>2025-1학기</td>
+                            <td>2024.12.01 ~ 12.10</td>
+                            <td><span class="badge badge-blue">신청 중</span></td>
+                        </tr>
+                        <tr>
+                    <td>천안</td>
+                    <td>2024-2학기</td>
+                    <td>2024.06.01 ~ 06.10</td>
+                    <td><span class="badge badge-green">입사 완료</span></td>
+                </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('기숙사 신청(천안)', '입사 신청서를 작성하시겠습니까?', '작성')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-dorm-merit-penalty" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">년도</span>
+                    <select class="form-select">
+                        <option>2023년</option>
+                        <option>2024년</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('상/벌점 내역이 조회되었습니다.')"><span class="material-symbols-outlined">search</span> 상/벌점 내역 조회</button>
+            </div>
+            <div class="data-grid">
+            <h3 style="
+            background:#f1f5f9;
+            color:var(--text-main);
+            padding:10px 20px;
+            font-size:1rem;
+            border-bottom:1px solid var(--border-color);
+            margin:0;
+        ">
+            상/벌점 현황 조회 (학생)
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>구분</th>
+                            <th>내용</th>
+                            <th>점수</th>
+                            <th width="15%">날짜</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><span class="badge badge-blue">상점</span></td>
+                            <td>생활관 자치회 활동</td>
+                            <td>+10</td>
+                            <td>2024.10.20</td>
+                        </tr>
+                        <tr>
+                    <td><span class="badge badge-red">벌점</span></td>
+                    <td>귀사 시간 10분 초과</td>
+                    <td>-2</td>
+                    <td>2024.11.15</td>
+                </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div id="screen-dorm-roommate" class="screen">
+            <div class="data-grid" style="margin-top: 20px;">
+                <h3 style="
+            background:#f1f5f9;color:var(--text-main);padding:10px 20px;font-size:1rem;border-bottom:1px solid var(--border-color);margin:0;">
+            룸메이트 신청 내역
+        </h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>학번</th>
+                            <th>연락처</th>
+                            <th>현황</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>홍길동</td>
+                            <td>20240000</td>
+                            <td>010-0000-0000</td>
+                            <td style="color: #28a745; font-weight: 600;">신청됨</td> 
+                        </tr>
+                        <tr>
+                <td>김상명</td>
+                <td>20241111</td>
+                <td>010-0000-1111</td>
+                <td style="color: #28a745; font-weight: 600;">신청됨</td> 
+            </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('룸메이트 신청', '룸메이트를 신청하시겠습니까?', '신청')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-dorm-leave-extend" class="screen">
+            <div class="data-grid" style="margin-top: 20px;">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">외박 및 귀사시간 연장 신청 내역</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th>이름</th>
+                            <th>학번</th>
+                            <th>신청 구분</th>
+                            <th>기간/시간</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>홍길동</td>
+                            <td>20240001</td>
+                            <td>외박</td>
+                            <td>2025-12-05 ~ 12-07</td>
+                        </tr>
+                        <tr>
+                            <td>홍길동</td>
+                            <td>20240001</td>
+                            <td>귀사시간 연장</td>
+                            <td>2025-12-01 (01:00)</td>
+                        </tr>
+                        <tr>
+                            <td>김철수</td>
+                            <td>20240002</td>
+                            <td>외박</td>
+                            <td>2025-11-20 ~ 11-21</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('외박/연장 신청', '외박/연장 신청서를 작성하시겠습니까?', '작성')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+
+        <div id="screen-dorm-receipt-print" class="screen">
+            <div class="search-bar">
+                <div class="search-group">
+                    <span class="search-label">학년도/학기</span>
+                    <select class="form-select">
+                        <option>2025년 1학기</option>
+                        <option>2024년 2학기</option>
+                        <option>2024년 1학기</option>
+                    </select>
+                </div>
+                <button class="btn-search" onclick="showToast('기숙사비 납부 내역 및 확인서를 조회하였습니다.')"><span class="material-symbols-outlined">search</span> 조회</button>
+            </div>
+            <div class="data-grid">
+                <h3 style="background: #f1f5f9; color: var(--text-main); padding: 10px 20px; font-size: 1rem; border-bottom: 1px solid var(--border-color);">기숙사비 납부 내역 및 확인서</h3>
+                <table class="sys-table">
+                    <thead>
+                        <tr>
+                            <th width="15%">학년도/학기</th>
+                            <th width="15%">구분</th>
+                            <th width="20%">금액</th>
+                            <th width="20%">납부일자</th>
+                            <th width="15%">납부 상태</th>
+                            <th width="15%">확인서</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>2025년 1학기</td>
+                            <td>기숙사비</td>
+                            <td>1,200,000 원</td>
+                            <td>-</td>
+                            <td style="color: #dc2626; font-weight: 600;"><span class="badge badge-red">미납</span></td>
+                            <td><button class="btn-print" disabled>출력 불가</button></td>
+                        </tr>
+                        <tr>
+                            <td>2024년 2학기</td>
+                            <td>입사비</td>
+                            <td>100,000 원</td>
+                            <td>2024.08.20</td>
+                            <td style="color: #16a34a; font-weight: 600;"><span class="badge badge-green">납부 완료</span></td>
+                            <td><button class="btn-print">확인서 출력</button></td>
+                        </tr>
+                        <tr>
+                            <td>2024년 2학기</td>
+                            <td>기숙사비</td>
+                            <td>1,200,000 원</td>
+                            <td>2024.08.20</td>
+                            <td style="color: #16a34a; font-weight: 600;"><span class="badge badge-green">납부 완료</span></td>
+                            <td><button class="btn-print">확인서 출력</button></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div style="text-align: right; padding: 15px 20px;">
+                                    <button class="btn-search" style="margin-right: 0;" onclick="openModal('기숙사 납부 확인서 출력', '기숙사 납부 확인서 출력하시겠습니까?', '출력')"><span class="material-symbols-outlined">edit</span> 신청</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<div class="toast-container" id="toastContainer"></div>
+
+<div class="modal-overlay" id="commonModal">
+    <div class="modal-window">
+        <div class="modal-header">
+            <h3 class="modal-title" id="modalTitle">상세 정보</h3>
+            <span class="material-symbols-outlined modal-close" onclick="closeModal()">close</span>
+        </div>
+        <div class="modal-body" id="modalBody">
+            </div>
+        <div class="modal-footer">
+            <button class="btn-modal btn-modal-close" onclick="closeModal()">취소</button>
+            <button class="btn-modal btn-modal-action" id="modalActionBtn" onclick="closeModal()">확인</button>
+        </div>
+    </div>
+</div>
+<script>
+    function showToast(message, type = 'success') {
+        const container = document.getElementById('toastContainer');
+        const toast = document.createElement('div');
+        toast.className = `toast ${type === 'success' ? 'toast-success' : 'toast-error'}`;
+        
+        let iconName = type === 'success' ? 'check_circle' : 'error';
+        
+        toast.innerHTML = `
+            <span class="material-symbols-outlined" style="visibility:visible; font-size:1.2rem; color:${type === 'success' ? '#10b981' : '#ef4444'}">${iconName}</span>
+            <span>${message}</span>
+        `;
+        
+        container.appendChild(toast);
+        
+        setTimeout(() => toast.classList.add('show'), 10);
+        setTimeout(() => {
+            toast.classList.remove('show');
+            setTimeout(() => toast.remove(), 300);
+        }, 1000);
+    }
+
+    function openModal(title, content, actionText = "확인") {
+        const modal = document.getElementById('commonModal');
+        document.getElementById('modalTitle').innerText = title;
+        document.getElementById('modalBody').innerHTML = content;
+        document.getElementById('modalActionBtn').innerText = actionText;
+        modal.classList.add('open');
+    }
+
+    function closeModal() {
+        const modal = document.getElementById('commonModal');
+        modal.classList.remove('open');
+    }
+    
+    document.getElementById('commonModal').addEventListener('click', function(e) {
+        if (e.target === this) closeModal();
+    });
+
+    function toggleAccordion(labelElement) {
+        const accordion = labelElement.closest('.menu-accordion');
+        const wrapper = accordion.querySelector('.menu-items-wrapper');
+        const icon = labelElement.querySelector('.material-symbols-outlined');
+
+        if (accordion.classList.contains('active')) {
+            accordion.classList.remove('active');
+            wrapper.style.maxHeight = '0';
+            icon.innerText = 'expand_more';
+        } else {
+            // 현재 아코디언 열기
+            
+            accordion.classList.add('active');
+            wrapper.style.maxHeight = wrapper.scrollHeight + 'px'; 
+            icon.innerText = 'expand_less';
+        }
+    }
+
+    // ====================================
+    // [2] 화면 전환 및 브레드크럼 로직
+    // ====================================
+    function switchScreen(screenId, element, titleText) {
+        // 1~4 단계: 메뉴 활성화 및 화면 전환
+        document.querySelectorAll('.menu-item').forEach(el => el.classList.remove('active'));
+        element.classList.add('active');
+        document.getElementById('header-title').innerText = titleText;
+        document.querySelectorAll('.screen').forEach(screen => screen.classList.remove('active'));
+        const target = document.getElementById('screen-' + screenId);
+        if(target) target.classList.add('active');
+        
+        
+        // 5. 브레드크럼 업데이트 (그룹 이름 동적 설정)
+        const accordion = element.closest('.menu-accordion'); 
+        const groupLabelElement = accordion.querySelector('.menu-group-label');
+        let groupLabel = Array.from(groupLabelElement.childNodes)
+            .find(node => node.nodeType === 3 && node.nodeValue.trim().length > 0)
+            .nodeValue.trim(); 
+            
+        // 여기를 '기본'으로 고정합니다.
+        document.querySelector('.breadcrumb').innerText = ` > ${groupLabel} > 기본`; 
+        
+        // 메뉴 항목 클릭 시 해당 아코디언이 닫혀있으면 열기
+        if (accordion && !accordion.classList.contains('active')) {
+            toggleAccordion(accordion.querySelector('.menu-group-label'));
+        }
+    }
+    
+    // ====================================
+    // [3] 세션 타이머 로직
+    // ====================================
+    let countdown;
+    let timerDuration = 1800; // 30분
+
+    function startTimer(duration) {
+        let timer = duration;
+        const timerDisplay = document.getElementById('timerText');
+        if (!timerDisplay) return;
+
+        clearInterval(countdown);
+        
+        countdown = setInterval(() => {
+            const minutes = Math.floor(timer / 60);
+            let seconds = timer % 60;
+            seconds = seconds < 10 ? '0' + seconds : seconds;
+            timerDisplay.textContent = minutes + ':' + seconds;
+            
+            if (--timer < 0) {
+                clearInterval(countdown);
+                timerDisplay.textContent = '00:00';
+                openModal("세션 만료", "세션 시간이 만료되었습니다.<br>로그인 페이지로 이동합니다.", "확인");
+            }
+        }, 1000);
+    }
+
+    function extendSession() {
+        startTimer(timerDuration); 
+        showToast("세션 시간이 30분 연장되었습니다.");
+    }
+
+    // ====================================
+    // [4] 초기화
+    // ====================================
+    document.addEventListener('DOMContentLoaded', () => {
+        // 초기 아코디언 상태
+        const initialAccordion = document.querySelector('.menu-accordion.active .menu-items-wrapper');
+        if (initialAccordion) {
+            initialAccordion.style.maxHeight = initialAccordion.scrollHeight + 'px';
+        }
+        
+        // 초기 타이틀 및 브레드크럼 설정
+        const initialActiveItem = document.querySelector('.menu-item.active');
+        if (initialActiveItem) {
+            const titleText = initialActiveItem.innerText.trim();
+            document.getElementById('header-title').innerText = titleText;
+            const groupLabelElement = initialActiveItem.closest('.menu-accordion').querySelector('.menu-group-label');
+            let groupLabel = Array.from(groupLabelElement.childNodes)
+                .find(node => node.nodeType === 3 && node.nodeValue.trim().length > 0)
+                .nodeValue.trim();
+            
+            // 초기 화면 로딩 시 Breadcrumb을 '기본'으로 고정합니다.
+            document.querySelector('.breadcrumb').innerText = ` > ${groupLabel} > 기본`;
+        }
+        
+        // 타이머 시작
+        startTimer(timerDuration);
+    });
+
+    window.addEventListener('load', () => {
+        // 아이콘 로딩 완료 후 표시
+        document.querySelectorAll('.material-symbols-outlined').forEach(icon => {
+            icon.style.visibility = 'visible';
+        });
+    });
+</script>
+
+</body>
+</html>
